@@ -30,7 +30,7 @@
         <!-- <div id="insertion" class="h-100 w-100 d-inline-block bg-white"> -->
         <div id="insertion" class="">
           <label for="">Insertion Sort</label>
-          <table class="table" id="insertTable" style="height: 300px;">
+          <table class="table" id="insertTable" style="height: 300px;  width: 550px !important;">
             <thead>
               <tr>
                 <th scope="col"></th>
@@ -115,7 +115,7 @@
           $("#insertTable tr").append(tb);
         }
       }).done(data => {
-        console.log('ajax');
+        // console.log('ajax');
       }).fail(err => {
         console.log('deu pau');
         console.log(err);

@@ -1,0 +1,813 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!--
+   Requires support for the HTML5 "canvas" element.  Should work in new
+   browsers, including Firefox, Chrome, Safari, Opera, and Internet Explorer 9.
+   Uses Javascript and a canvas to demonstate several sorting algoithms.
+   This is a port of a Java program from about 1998, which was itself a
+   post of an older Macintosh Pascal program.  The hard part of the Javascript
+   port was that the original code uses loops in a separate thread, which isn't
+   possible in Javascript (except maybe with "worker" threads, which I haven't
+   tried yet).  The solution that I used here is an "actionQueue" that contains
+   a queue of actions to be performed.
+-->
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Sorting with HTML Canvas</title>
+  <!-- <script src="jquery-1.6.1.min.js" type="text/javascript"></script> -->
+  <script src="https://code.jquery.com/jquery-1.6.1.js" integrity="sha256-Du92qVg6bHoet2TTP+N2v+GGHfefq4LCw/XRYYPoIBY="
+    crossorigin="anonymous"></script>
+  <!--[if lt IE 9]>
+    <script src="excanvas.js"></script>
+<![endif]-->
+  <script type="text/javascript">
+    var borderColor = "#00D"; // I would use 'const', not 'var', but it breaks in IE
+    var barColor = "#888";
+    var finishedBarColor = "#000";
+    var movingBarColor = "#DDD";
+    var movingBarOutlineColor = "#888";
+    var boxColor = "#D0D";
+    var multiBoxColor = "#0B0";
+    var maxColor = "#F00";
+
+    var barGap = 10;
+
+    var IDLE = 0; // possible values for the "state" variable.
+    var STARTING = 1;
+    var RUN = 2;
+    var STEPPING = 3;
+    var PAUSED = 4;
+
+    var state = IDLE;
+
+    var g; // graphic context for drawing on the canvas.
+    var width, height; // width and height of the canvas.
+
+    var barWidth, barHeight, minBarHeight, barIncrement; // measurements used for drawing.
+    var leftOffset, firstRow_y, secondRow_y, textAscent;
+
+    var method; // The sorting method that is being used, coded as 1,2,3,4,5; controlled by a select element.
+
+    var fast = false; // Things move faster when this is true;  the value is controlled by a checkbox.
+
+    var item = new Array(); // a 33-element array containing the numbers to be sorted in positions 1 to 16.
+    // item[0] holds the value of temp.  positions 17 - 33 are used in MergeSort.
+    // a value of -1 in this array means that no item is present.  When an item
+    // is in its final position, 100 is added to the value as a signal that the
+    // item should be drawn in black.
+
+    var tempOn = false; // Variables that control the extra stuff that is sometimes drawn, in addition to items.
+    var mergeBox = [-1, -1, -1];;
+    var multiBoxLoc = {
+      x: -1,
+      y: -1
+    };
+    var movingItemLoc = {
+      x: -1,
+      y: -1
+    };
+    var maxLoc, hiLoc, loLoc, box1Loc, box2Loc, movingItem;
+
+    var copyCt; // Number of copies done so far in the current sort.
+    var compCt; // Number of comparisons done so far in the current sort.
+
+    var timeout = null; // When non-null, indicates a pending timeout (so it can be cleared to stop the animation).
+
+    function stopRunning() { // does any pending actions in the action queue (with no delay) and cancels any timeout.
+      while (actionQueue.length > 0) {
+        doAction(actionQueue.shift());
+      }
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+    }
+
+    function setState(
+      newState) { // called whenever the state changes; sets enabled/disabled status of various elements.
+      state = newState;
+      $("#runBtn").attr("disabled", state == RUN || state == IDLE || state == STEPPING);
+      $("#pauseBtn").attr("disabled", state != RUN);
+      $("#stepBtn").attr("disabled", state == RUN || state == IDLE || state == STEPPING);
+      $("#sortSelect").attr("disabled", state == RUN || state == PAUSED || state == STEPPING);
+    }
+
+    function newSort() { // Set up to get ready for a new sort by storing items in random array positions, etc.
+      stopRunning();
+      setState(STARTING);
+      valid = false;
+      maxLoc = -1;
+      hiLoc = -1;
+      loLoc = -1;
+      box1Loc = -1;
+      box2Loc = -1;
+      multiBoxLoc.x = -1;
+      mergeBox[0] = [-1, -1, -1];
+      movingItem = -1;
+      tempOn = false;
+      for (var i = 1; i <= 16; i++)
+        item[i] = i;
+      for (var i = 16; i >= 2; i--) {
+        var j = 1 + Math.floor(Math.random() * i);
+        var temp = item[i];
+        item[i] = item[j];
+        item[j] = temp;
+      }
+      item[0] = -1;
+      for (var i = 17; i < 33; i++)
+        item[i] = -1;
+      $("#compCt").html("0");
+      $("#moveCt").html("0");
+      compCt = 0;
+      copyCt = 0;
+      valid = false;
+      draw();
+    }
+
+    //-------------------------------- Drawing ------------------------------------------
+
+    function putItem(i) { // draws item i from the array item[]; if item[i] is -1, nothing is drawn.
+      var h = item[i];
+      if (h == -1)
+        return;
+      var x, y, ht;
+      if (h > 16) {
+        ht = (h - 100) * barIncrement + minBarHeight;
+        g.fillStyle = finishedBarColor;
+      } else {
+        ht = h * barIncrement + minBarHeight;
+        g.fillStyle = barColor;
+      }
+      if (i == 0) {
+        x = leftOffset + ((barWidth + barGap) * 15) / 2;
+        y = secondRow_y - ht;
+      } else if (i < 17) {
+        x = leftOffset + (i - 1) * (barWidth + barGap);
+        y = firstRow_y - ht;
+      } else {
+        x = leftOffset + (i - 17) * (barWidth + barGap);
+        y = secondRow_y - ht;
+      }
+      try {
+        g.fillRect(x, y, barWidth, ht);
+        g.strokeStyle = finishedBarColor;
+        g.strokeRect(x, y, barWidth, ht);
+      } catch (e) { // (Got an error during development when item[i] was undefined.  Shouldn't happen again. :-)
+        if (timeout != null)
+          timeout.cancel();
+        setState(IDLE);
+        alert("Internal error while drawing!!??");
+      }
+    }
+
+    function drawMovingItem() { // Draws an item that is being moved to animate the copying of an item from one place to another.
+      var ht = movingItem * barIncrement + minBarHeight;
+      g.fillStyle = movingBarColor;
+      g.fillRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
+      g.strokeColor = movingBarOutlineColor;
+      g.strokeRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
+    }
+
+    function drawMax() { // Writes "Max" under one of the items, with an arrow pointing to the item.
+      var sw = 30; // (guess at string width)
+      var x = leftOffset + (maxLoc - 1) * (barWidth + barGap) + barWidth / 2;
+      var y = firstRow_y + 38 + textAscent;
+      g.fillStyle = maxColor;
+      g.fillText("Max", x - sw / 2, y + textAscent);
+      g.strokeStyle = maxColor;
+      g.beginPath();
+      g.moveTo(x, y);
+      g.lineTo(x, y - 29);
+      g.moveTo(x, y - 29);
+      g.lineTo(x + 6, y - 24);
+      g.moveTo(x, y - 29);
+      g.lineTo(x - 6, y - 24);
+      g.stroke();
+    }
+
+    function drawBox(boxLoc) { // draws a box aroud one of the items (indicated by boxLoc)
+      var x, y;
+      if (boxLoc == 0) {
+        x = leftOffset + ((barWidth + barGap) * 15) / 2;
+        y = secondRow_y;
+      } else if (boxLoc < 17) {
+        x = leftOffset + (boxLoc - 1) * (barWidth + barGap);
+        y = firstRow_y;
+      } else {
+        x = leftOffset + (boxLoc - 17) * (barWidth + barGap);
+        y = secondRow_y;
+      }
+      g.strokeStyle = boxColor;
+      g.strokeRect(x - 2, y - barHeight - 2, barWidth + 4, barHeight + 4);
+    }
+
+    function drawMultiBox() { // draws a box around items number multiBoxLoc.x through multiBoxLoc.y
+      var x, y, wd;
+      if (multiBoxLoc.x < 17) {
+        y = firstRow_y;
+        x = leftOffset + (multiBoxLoc.x - 1) * (barWidth + barGap);
+      } else {
+        y = secondRow_y;
+        x = leftOffset + (multiBoxLoc.x - 17) * (barWidth + barGap);
+      }
+      wd = (multiBoxLoc.y - multiBoxLoc.x) * (barGap + barWidth) + barWidth;
+      g.strokeStyle = multiBoxColor;
+      g.strokeRect(x - 4, y - barHeight - 4, wd + 8, barHeight + 8);
+    }
+
+    function drawMergeListBoxes() { // Draws a pair of boxes around lists that are being merged in MergeSort
+      var x, y, wd1, wd2;
+      y = firstRow_y;
+      x = leftOffset + (mergeBox[0] - 1) * (barWidth + barGap);
+      wd1 = (mergeBox[1] - mergeBox[0]) * (barGap + barWidth) + barWidth;
+      wd2 = (mergeBox[2] - mergeBox[0]) * (barGap + barWidth) + barWidth;
+      g.strokeStyle = multiBoxColor;
+      g.strokeRect(x - 4, y - barHeight - 4, wd1 + 8, barHeight + 8);
+      g.strokeRect(x - 4, y - barHeight - 4, wd2 + 8, barHeight + 8);
+    }
+
+    function draw() { // Completely redraws the canvas to show the current state.
+      g.clearRect(0, 0, width, height);
+      g.strokeStyle = borderColor;
+      g.strokeRect(0, 0, width, height);
+      g.strokeRect(1, 1, width - 2, height - 2);
+      for (var i = 1; i <= 16; i++)
+        putItem(i);
+      g.fillStyle = borderColor;
+      for (var i = 1; i <= 16; i++) {
+        var sw = (i < 10) ? 6 : 12;
+        g.fillText("" + i, leftOffset + (i - 1) * (barWidth + barGap) + (barWidth - sw) / 2, firstRow_y + 6 +
+          textAscent);
+      }
+      for (var i = 17; i <= 32; i++)
+        putItem(i);
+      if (tempOn) {
+        g.fillStyle = borderColor;
+        var sw = 40;
+        g.fillText("Temp", leftOffset + (16 * barWidth + 15 * barGap - sw) / 2, secondRow_y + 5 + textAscent);
+        putItem(0);
+      }
+      if (maxLoc >= 0)
+        drawMax();
+      if (box1Loc >= 0)
+        drawBox(box1Loc);
+      if (box2Loc >= 0)
+        drawBox(box2Loc);
+      if (multiBoxLoc.x > 0)
+        drawMultiBox();
+      if (mergeBox[0] > 0)
+        drawMergeListBoxes();
+      if (movingItem >= 0)
+        drawMovingItem();
+    }
+
+    // ---------------------------- Stepping through the sorts ------------------------------
+
+    var actionQueue = new Array(); // A queue of pending actions for implmenting some aspects of the animation.
+
+    var done = false; // state variables for scripting the various sorting algorithms.
+    var i, j, k;
+    var hi, lo;
+    var stack = new Array();
+    var stackCt;
+    var sortLength, end_i, end_j;
+    var valid = false; // false when a sort is just ready to start; set to true when the first step is taken.
+
+    function copyItem(toItem,
+      fromItem) { // copy an item from one place to another (actually just enqueue actions to do so)
+      if (fast) { // enqueue a single copy action when the "fast" checkbox is seledted.
+        actionQueue.push({
+          action: "copy",
+          from: fromItem,
+          to: toItem,
+          delay: 200 // Tempo que a barra fica em TEMP
+        });
+      } else { // enqueue a series of actions that move the item gradually from old position to new.
+        var x1, y1, x2, y2;
+        if (toItem == 0) {
+          x2 = leftOffset + ((barWidth + barGap) * 15) / 2;
+          y2 = secondRow_y;
+        } else if (toItem < 17) {
+          x2 = leftOffset + (toItem - 1) * (barWidth + barGap);
+          y2 = firstRow_y;
+        } else {
+          x2 = leftOffset + (toItem - 17) * (barWidth + barGap);
+          y2 = secondRow_y;
+        }
+        if (fromItem == 0) {
+          x1 = leftOffset + ((barWidth + barGap) * 15) / 2;
+          y1 = secondRow_y;
+        } else if (fromItem < 17) {
+          x1 = leftOffset + (fromItem - 1) * (barWidth + barGap);
+          y1 = firstRow_y;
+        } else {
+          x1 = leftOffset + (fromItem - 17) * (barWidth + barGap);
+          y1 = secondRow_y;
+        }
+        var dist = Math.round(Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)));
+        var ct = Math.round(dist / 3);
+        if (ct > 25)
+          ct = 25;
+        else if (ct < 6)
+          ct = 6;
+        actionQueue.push({
+          action: "startmove",
+          from: fromItem,
+          x: x1,
+          y: y1,
+          delay: 100
+        });
+        for (var i = 0; i <= ct; i++) {
+          actionQueue.push({
+            action: "move",
+            x: x1 + Math.round(((x2 - x1) * i) / ct),
+            y: y1 + Math.round(((y2 - y1) * i) / ct),
+            delay: 25
+          });
+        }
+        actionQueue.push({
+          action: "donemove",
+          to: toItem,
+          delay: 200
+        });
+      }
+    }
+
+    function swapItems(a, b) { // swaps two items; actually just enqueues actions to do that
+      copyItem(0, a);
+      copyItem(a, b);
+      copyItem(b, 0);
+    }
+
+    function greaterThan(itemA,
+      itemB) { // test if one item is greater than another; boxes are shown around the two items.
+      compCt++;
+      $("#compCt").html("" + compCt);
+      putBoxes(itemA, itemB);
+      return (item[itemA] > item[itemB]);
+    }
+
+    function putBoxes(itemA, itemB) { // show boxes around two items
+      box1Loc = itemA;
+      box2Loc = itemB;
+    }
+
+    function scriptSetup() { // The first step in a sort
+      method = $("#sortSelect").val();
+      switch (method) {
+        case "1": {
+          j = 16;
+          i = 1;
+          tempOn = true;
+          break;
+        }
+        case "2": {
+          j = 16;
+          i = 2;
+          maxLoc = 1;
+          tempOn = true;
+          break;
+        }
+        case "3": {
+          j = 0;
+          multiBoxLoc.x = 1;
+          multiBoxLoc.y = 1;
+          break;
+        }
+        case "4": {
+          sortLength = 1;
+          i = 1;
+          end_i = 1;
+          j = 2;
+          end_j = 2;
+          k = 17;
+          lo = 0;
+          hi = 1;
+          multiBoxLoc.x = 17;
+          multiBoxLoc.y = 18;
+          mergeBox = [1, 1, 2];
+          break;
+        }
+        case "5": {
+          stackCt = 0;
+          hi = 16;
+          lo = 1;
+          k = 0;
+          i = 1; // i and j are starting valuse for lo and hi
+          j = 16;
+          multiBoxLoc.x = 1;
+          multiBoxLoc.y = 16;
+          tempOn = true;
+          break;
+        }
+      }
+    }
+
+
+    function scriptStep() { // Do one step in a sort.  (A very long function!)
+      switch (method) {
+        case "1": // bubble sort
+          if (i == j) {
+            putBoxes(-1, -1);
+            if (j == 2) {
+              done = true;
+              tempOn = false;
+              item[1] = 100 + item[1];
+            } else {
+              j = j - 1;
+              i = 1;
+            }
+          } else {
+            if (greaterThan(i, i + 1)) {
+              swapItems(i, i + 1);
+            }
+            i = i + 1;
+            if (i == j) {
+              actionQueue.push({
+                action: "finishItem",
+                itemNum: j,
+                delay: 100
+              });
+            }
+          } // end case 1
+          break;
+        case "2": // selection sort
+          if (j == 1) {
+            done = true;
+            item[1] = 100 + item[1];
+            tempOn = false;
+          } else if (i == -1) {
+            i = 2;
+            maxLoc = 1;
+          } else if (i > j) {
+            putBoxes(-1, -1);
+            k = maxLoc;
+            actionQueue.push({
+              action: "maxoff",
+              delay: 0
+            });
+            if (k == j)
+              console.log("Item " + j + " is already in its correct location.");
+            else {
+              if (j == 2)
+                console.log("Swap item 2 with item 1");
+              else
+                console.log("Swap item " + j + " with maximum among items 1 through " + (j - 1));
+              swapItems(k, j);
+            }
+            actionQueue.push({
+              action: "finishItem",
+              itemNum: j,
+              delay: 100
+            });
+            j = j - 1;
+            i = -1;
+          } else if (greaterThan(i, maxLoc)) {
+            maxLoc = i;
+            i = i + 1;
+          } else {
+            i = i + 1;
+          } // end case 2
+          break;
+        case "3": // insertions sort
+          if (j == 0) {
+            copyItem(0, 2);
+            j = 2;
+            i = 1;
+            tempOn = true;
+          } else if (j == 17) {
+            multiBoxLoc.x = -1;
+            multiBoxLoc.y - 1;
+            for (var x = 1; x <= 16; x++)
+              item[x] += 100;
+            done = true;
+            tempOn = false;
+          } else if (i == 0) {
+            copyItem(1, 0);
+            i = -1;
+          } else if (i == -1) {
+            putBoxes(-1, -1);
+            multiBoxLoc.x = 1;
+            multiBoxLoc.y = j;
+            j = j + 1;
+            i = -2;
+          } else if (i == -2) {
+            copyItem(0, j);
+            i = j - 1;
+          } else if (greaterThan(i, 0)) {
+            copyItem(i + 1, i);
+            i = i - 1;
+          } else {
+            copyItem(i + 1, 0);
+            i = -1;
+          } // end case 3
+          break;
+        case "4": // merge sort
+          if ((lo == 1) && (sortLength == 8)) {
+            for (var x = 1; x <= 16; x++)
+              item[x] += 100;
+            done = true;
+          } else if (lo == 1) {
+            hi = hi + 1;
+            sortLength = sortLength * 2;
+            k = 17;
+            i = 1;
+            j = sortLength + 1;
+            end_i = i + sortLength - 1;
+            end_j = j + sortLength - 1;
+            multiBoxLoc.x = i + 16;
+            multiBoxLoc.y = end_j + 16;
+            mergeBox = [i, end_i, end_j];
+            lo = 0;
+          } else if ((end_i < i) && (end_j < j)) {
+            if (k == 33) {
+              multiBoxLoc.x = -1;
+              multiBoxLoc.y = -1;
+              mergeBox = [-1, -1, -1];
+              for (var n = 1; n < 17; n++) {
+                actionQueue.push({
+                  action: "copy",
+                  from: n + 16,
+                  to: n,
+                  delay: 100
+                });
+              }
+              lo = 1;
+            } else {
+              end_i = end_i + 2 * sortLength;
+              end_j = end_j + 2 * sortLength;
+              j = end_i + 1;
+              i = j - sortLength;
+              multiBoxLoc.x = i + 16;
+              multiBoxLoc.y = end_j + 16;
+              mergeBox = [i, end_i, end_j];
+            }
+          } else if (end_i < i) {
+            putBoxes(-1, -1);
+            copyItem(k, j);
+            j = j + 1;
+            k = k + 1;
+          } else if (end_j < j) {
+            putBoxes(-1, -1);
+            copyItem(k, i);
+            i = i + 1;
+            k = k + 1;
+          } else if (greaterThan(i, j)) {
+            copyItem(k, j);
+            j = j + 1;
+            k = k + 1;
+          } else {
+            copyItem(k, i);
+            i = i + 1;
+            k = k + 1;
+          } // end case 4      
+          break;
+        case "5": // quicksort
+          if (k == 0) {
+            if (hi == lo) {
+              item[hi] = 100 + item[hi];
+              multiBoxLoc.x = -1;
+              multiBoxLoc.y = -1;
+              k = 1;
+            } else {
+              copyItem(0, lo);
+              k = -1;
+            }
+          } else if (k == 1) {
+            if (stackCt == 0) {
+              tempOn = false;
+              done = true;
+            } else {
+              hi = stack[stackCt];
+              lo = stack[stackCt - 1];
+              j = hi;
+              i = lo;
+              stackCt = stackCt - 2;
+              multiBoxLoc.x = lo;
+              multiBoxLoc.y = hi;
+              k = 0;
+            }
+          } else if (k == 2) {
+            multiBoxLoc.x = -1;
+            multiBoxLoc.y = -1;
+            item[hi] = 100 + item[hi];
+            if (hi < j) {
+              stack[stackCt + 1] = hi + 1;
+              stack[stackCt + 2] = j;
+              stackCt = stackCt + 2;
+            }
+            if (hi > i) {
+              stack[stackCt + 1] = i;
+              stack[stackCt + 2] = hi - 1;
+              stackCt = stackCt + 2;
+            }
+            k = 1;
+          } else if (hi == lo) {
+            putBoxes(-1, -1);
+            copyItem(hi, 0);
+            k = 2;
+          } else if (item[lo] == -1) {
+            if (greaterThan(0, hi)) {
+              copyItem(lo, hi);
+              lo = lo + 1;
+              multiBoxLoc.x = lo;
+              multiBoxLoc.y = hi;
+            } else {
+              hi = hi - 1;
+              multiBoxLoc.x = lo;
+              multiBoxLoc.y = hi;
+            }
+          } else if (item[hi] == -1) {
+            if (greaterThan(lo, 0)) {
+              copyItem(hi, lo);
+              hi = hi - 1;
+              multiBoxLoc.x = lo;
+              multiBoxLoc.y = hi;
+            } else {
+              lo = lo + 1;
+              multiBoxLoc.x = lo;
+              multiBoxLoc.y = hi;
+            }
+          } // end case 5
+      } // end switch
+    } // end scriptStep()
+
+    function doAction(what) { // perform one action from the action queue; actions are encoded as objects.
+      switch (what.action) {
+        case "copy":
+          item[what.to] = item[what.from];
+          item[what.from] = -1;
+          copyCt++;
+          $("#moveCt").html("" + copyCt);
+          break;
+        case "startmove": //alert("start move " + what.from);
+          movingItem = item[what.from];
+          item[what.from] = -1;
+          movingItemLoc.x = what.x;
+          movingItemLoc.y = what.y;
+          break;
+        case "move":
+          movingItemLoc.x = what.x;
+          movingItemLoc.y = what.y;
+          break;
+        case "donemove": //alert("end move " + what.to + "," + movingItem);
+          item[what.to] = movingItem;
+          movingItem = -1;
+          copyCt++;
+          $("#moveCt").html("" + copyCt);
+          break;
+        case "finishItem":
+          item[what.itemNum] += 100;
+          break;
+        case "maxoff":
+          maxLoc = -1;
+          break;
+      }
+    }
+
+    function frame() { // Seta o delay
+      timeout = null;
+      fast = $("#fastCheckbox").attr("checked");
+      if (actionQueue.length > 0) {
+        var what;
+        do {
+          what = actionQueue.shift();
+          doAction(what);
+        } while (actionQueue.length > 0 && what.delay == 0);
+        timeout = setTimeout(frame, Math.max(5, what.delay));
+      } else {
+        if (!valid) {
+          scriptSetup();
+          valid = true;
+          done = false;
+          if (state == RUN)
+            timeout = setTimeout(frame, fast ? 100 : 1000);
+        } else {
+          scriptStep();
+          if (!done && state == RUN)
+            timeout = setTimeout(frame, fast ? 100 : 1000);
+        }
+        if (done)
+          setState(IDLE);
+        else if (state == STEPPING)
+          setState(PAUSED);
+      }
+      if (done && actionQueue.length == 0)
+        setState(IDLE);
+      else if (state == STEPPING && actionQueue.length == 0)
+        setState(PAUSED);
+      draw();
+    }
+
+
+    // ---------------------------- Control and Initialization -------------------------------
+
+    function doRun() { // handler for "Run" button
+      if (state == RUN || state == IDLE || state == STEPPING)
+        return; // won't happen if button enable/disable is functioning
+      setState(RUN);
+      frame();
+    }
+
+    function doStep() { // handler for "Step" button
+      if (state == RUN || state == IDLE || state == STEPPING)
+        return; // won't happen if button enable/disable is functioning
+      setState(STEPPING);
+      frame();
+    }
+
+    function doPause() { // handler for "Pause" button
+      if (state != RUN)
+        return; // won't happen if button enable/disable is functioning
+      stopRunning();
+      setState(PAUSED);
+      draw();
+    }
+
+    function doNew() { // handler for "New" button
+      newSort();
+    }
+
+    $(function () { // initialization; called by jQuery when the document is ready.
+      var canvas = document.getElementById("sortcanvas"); // A reference to the canvas element.
+      if (!canvas || !canvas.getContext) {
+        // This browser apparently does not support canvasses since the canvas
+        // element has no getContext function (or doesn't even exist).  Give up!
+        $("#message1").html("Sorry, your browser doesn't support the canvas element.");
+        return;
+      }
+      g = canvas.getContext("2d");
+      if (!g.fillText) { // eliminate missing function error in excanvas.js for IE 8 and earlier
+        g.fillText = function () {};
+      }
+      g.font = "bold 11pt sans-serif";
+      width = canvas.width;
+      height = canvas.height;
+      var x = (width - 20 + barGap) / 16;
+      barWidth = x - barGap;
+      textAscent = 15;
+      leftOffset = (width - 16 * barWidth - 15 * barGap) / 2;
+      barHeight = (height - 40 - 2 * textAscent) / 2;
+      barIncrement = (barHeight - 3) / 17;
+      minBarHeight = barHeight - 17 * barIncrement;
+      firstRow_y = barHeight + 10;
+      secondRow_y = 2 * barHeight + 25 + textAscent;
+      $("#sortSelect").val(2);
+      $("#fastCheckbox").attr("checked", false);
+      $("#runBtn").click(doRun);
+      $("#stepBtn").click(doStep);
+      $("#pauseBtn").click(doPause);
+      $("#newBtn").click(doNew);
+      $("#fastCheckbox").change(function () {
+        if ($("#fastCheckbox").attr("checked"));
+      });
+      newSort();
+    });
+  </script>
+</head>
+
+<body>
+
+  <noscript>
+    <p style="color:red">Sorry, this program requires JavaScript to run.</p>
+  </noscript>
+
+  <table align=center border=2 cellspacing=0 cellpadding=5>
+    <tr>
+      <td align=center>
+        Please switch links to the improved version at<br>
+        <a
+          href="http://math.hws.edu/eck/js/sorting/xSortLab.html">http://math.hws.edu/eck/js/sorting/xSortLab.html</a><br>
+        which includes instructions and timed sorting.
+      </td>
+    </tr>
+  </table>
+  <br>
+  <br>
+  <div style="float:left;">
+    <canvas id="sortcanvas" width=600 height=300 style="background-color:rgb(230,230,255)"></canvas>
+  </div>
+  <div style="float:left; margin-left:30px;">
+    <p><select id="sortSelect">
+        <option value="1">Bubble Sort</option>
+        <option value="2">Selection Sort</option>
+        <option value="3">Insertion Sort</option>
+        <option value="4">Merge Sort</option>
+        <option value="5">Quick Sort</option>
+      </select></p>
+    <p><button id="newBtn">New Sort</button></p>
+    <p><input type=checkbox id="fastCheckbox"><label for="fastCheckbox">Fast</label></p>
+    <p><button id="runBtn">Run</button></p>
+    <p><button id="pauseBtn">Pause</button></p>
+    <p><button id="stepBtn">Step</button></p>
+    <p style="margin-top:30px;">
+      <b>Comparisons:</b> <span id="compCt">0</span>
+    </p>
+    <p style="margin-top:30px;">
+      <b>Copies: </b> <span id="moveCt">0</span>
+    </p>
+  </div>
+</body>
+
+</html>
