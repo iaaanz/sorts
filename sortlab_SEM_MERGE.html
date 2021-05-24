@@ -31,7 +31,7 @@
     var multiBoxColor = "#0B0";
     var maxColor = "#F00";
 
-    var barGap = 10;
+    var barGap = 2;
 
     var IDLE = 0; // possible values for the "state" variable.
     var STARTING = 1;
@@ -51,14 +51,14 @@
 
     var fast = false; // Things move faster when this is true;  the value is controlled by a checkbox.
 
-    var item = new Array(); // a 33-element array containing the numbers to be sorted in positions 1 to 16.
-    // item[0] holds the value of temp.  positions 17 - 33 are used in MergeSort.
+    var item = new Array(); // a 33-element array containing the numbers to be sorted in positions 1 to 26.
+    // item[0] holds the value of temp.  positions 27 - 33 are used in MergeSort.
     // a value of -1 in this array means that no item is present.  When an item
     // is in its final position, 100 is added to the value as a signal that the
     // item should be drawn in black.
 
     var tempOn = false; // Variables that control the extra stuff that is sometimes drawn, in addition to items.
-    var mergeBox = [-1, -1, -1];;
+    var mergeBox = [-1, -1, -1];
     var multiBoxLoc = {
       x: -1,
       y: -1
@@ -73,6 +73,9 @@
     var compCt; // Number of comparisons done so far in the current sort.
 
     var timeout = null; // When non-null, indicates a pending timeout (so it can be cleared to stop the animation).
+
+    var valMain = 64; // Antigo 16
+    // var v5 = 25; // Var q tem valor 25
 
     function stopRunning() { // does any pending actions in the action queue (with no delay) and cancels any timeout.
       while (actionQueue.length > 0) {
@@ -106,16 +109,16 @@
       mergeBox[0] = [-1, -1, -1];
       movingItem = -1;
       tempOn = false;
-      for (var i = 1; i <= 16; i++)
+      for (var i = 1; i <= valMain; i++)
         item[i] = i;
-      for (var i = 16; i >= 2; i--) {
+      for (var i = valMain; i >= 2; i--) {
         var j = 1 + Math.floor(Math.random() * i);
         var temp = item[i];
         item[i] = item[j];
         item[j] = temp;
       }
       item[0] = -1;
-      for (var i = 17; i < 33; i++)
+      for (var i = (valMain + 1); i < ((valMain * 2) + 1); i++)
         item[i] = -1;
       $("#compCt").html("0");
       $("#moveCt").html("0");
@@ -132,7 +135,7 @@
       if (h == -1)
         return;
       var x, y, ht;
-      if (h > 16) {
+      if (h > valMain) {
         ht = (h - 100) * barIncrement + minBarHeight;
         g.fillStyle = finishedBarColor;
       } else {
@@ -140,13 +143,13 @@
         g.fillStyle = barColor;
       }
       if (i == 0) {
-        x = leftOffset + ((barWidth + barGap) * 15) / 2;
+        x = leftOffset + ((barWidth + barGap) * 25) / 2;
         y = secondRow_y - ht;
-      } else if (i < 17) {
+      } else if (i < (valMain + 1)) {
         x = leftOffset + (i - 1) * (barWidth + barGap);
         y = firstRow_y - ht;
       } else {
-        x = leftOffset + (i - 17) * (barWidth + barGap);
+        x = leftOffset + (i - (valMain + 1)) * (barWidth + barGap);
         y = secondRow_y - ht;
       }
       try {
@@ -189,13 +192,13 @@
     function drawBox(boxLoc) { // draws a box aroud one of the items (indicated by boxLoc)
       var x, y;
       if (boxLoc == 0) {
-        x = leftOffset + ((barWidth + barGap) * 15) / 2;
+        x = leftOffset + ((barWidth + barGap) * 25) / 2;
         y = secondRow_y;
-      } else if (boxLoc < 17) {
+      } else if (boxLoc < (valMain + 1)) {
         x = leftOffset + (boxLoc - 1) * (barWidth + barGap);
         y = firstRow_y;
       } else {
-        x = leftOffset + (boxLoc - 17) * (barWidth + barGap);
+        x = leftOffset + (boxLoc - (valMain + 1)) * (barWidth + barGap);
         y = secondRow_y;
       }
       g.strokeStyle = boxColor;
@@ -204,12 +207,12 @@
 
     function drawMultiBox() { // draws a box around items number multiBoxLoc.x through multiBoxLoc.y
       var x, y, wd;
-      if (multiBoxLoc.x < 17) {
+      if (multiBoxLoc.x < (valMain + 1)) {
         y = firstRow_y;
         x = leftOffset + (multiBoxLoc.x - 1) * (barWidth + barGap);
       } else {
         y = secondRow_y;
-        x = leftOffset + (multiBoxLoc.x - 17) * (barWidth + barGap);
+        x = leftOffset + (multiBoxLoc.x - (valMain + 1)) * (barWidth + barGap);
       }
       wd = (multiBoxLoc.y - multiBoxLoc.x) * (barGap + barWidth) + barWidth;
       g.strokeStyle = multiBoxColor;
@@ -232,20 +235,20 @@
       g.strokeStyle = borderColor;
       g.strokeRect(0, 0, width, height);
       g.strokeRect(1, 1, width - 2, height - 2);
-      for (var i = 1; i <= 16; i++)
+      for (var i = 1; i <= valMain; i++)
         putItem(i);
       g.fillStyle = borderColor;
-      for (var i = 1; i <= 16; i++) {
+      for (var i = 1; i <= valMain; i++) {
         var sw = (i < 10) ? 6 : 12;
         g.fillText("" + i, leftOffset + (i - 1) * (barWidth + barGap) + (barWidth - sw) / 2, firstRow_y + 6 +
           textAscent);
       }
-      for (var i = 17; i <= 32; i++)
+      for (var i = (valMain + 1); i <= (valMain * 2); i++)
         putItem(i);
       if (tempOn) {
         g.fillStyle = borderColor;
         var sw = 40;
-        g.fillText("Temp", leftOffset + (16 * barWidth + 15 * barGap - sw) / 2, secondRow_y + 5 + textAscent);
+        g.fillText("Temp", leftOffset + (valMain * barWidth + 25 * barGap - sw) / 2, secondRow_y + 5 + textAscent);
         putItem(0);
       }
       if (maxLoc >= 0)
@@ -281,34 +284,34 @@
           action: "copy",
           from: fromItem,
           to: toItem,
-          delay: 200 // Tempo que a barra fica em TEMP
+          delay: 0 // Tempo que a barra fica em TEMP - default: 200
         });
       } else { // enqueue a series of actions that move the item gradually from old position to new.
         var x1, y1, x2, y2;
         if (toItem == 0) {
-          x2 = leftOffset + ((barWidth + barGap) * 15) / 2;
+          x2 = leftOffset + ((barWidth + barGap) * 25) / 2;
           y2 = secondRow_y;
-        } else if (toItem < 17) {
+        } else if (toItem < (valMain + 1)) {
           x2 = leftOffset + (toItem - 1) * (barWidth + barGap);
           y2 = firstRow_y;
         } else {
-          x2 = leftOffset + (toItem - 17) * (barWidth + barGap);
+          x2 = leftOffset + (toItem - (valMain + 1)) * (barWidth + barGap);
           y2 = secondRow_y;
         }
         if (fromItem == 0) {
-          x1 = leftOffset + ((barWidth + barGap) * 15) / 2;
+          x1 = leftOffset + ((barWidth + barGap) * (valMain - 1)) / 2;
           y1 = secondRow_y;
-        } else if (fromItem < 17) {
+        } else if (fromItem < (valMain + 1)) {
           x1 = leftOffset + (fromItem - 1) * (barWidth + barGap);
           y1 = firstRow_y;
         } else {
-          x1 = leftOffset + (fromItem - 17) * (barWidth + barGap);
+          x1 = leftOffset + (fromItem - (valMain + 1)) * (barWidth + barGap);
           y1 = secondRow_y;
         }
         var dist = Math.round(Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)));
         var ct = Math.round(dist / 3);
-        if (ct > 25)
-          ct = 25;
+        if (ct > (valMain - 1))
+          ct = (valMain - 1);
         else if (ct < 6)
           ct = 6;
         actionQueue.push({
@@ -323,7 +326,7 @@
             action: "move",
             x: x1 + Math.round(((x2 - x1) * i) / ct),
             y: y1 + Math.round(((y2 - y1) * i) / ct),
-            delay: 25
+            delay: (valMain - 1)
           });
         }
         actionQueue.push({
@@ -357,13 +360,13 @@
       method = $("#sortSelect").val();
       switch (method) {
         case "1": {
-          j = 16;
+          j = valMain;
           i = 1;
           tempOn = true;
           break;
         }
         case "2": {
-          j = 16;
+          j = valMain;
           i = 2;
           maxLoc = 1;
           tempOn = true;
@@ -381,23 +384,23 @@
           end_i = 1;
           j = 2;
           end_j = 2;
-          k = 17;
+          k = (valMain + 1);
           lo = 0;
           hi = 1;
-          multiBoxLoc.x = 17;
-          multiBoxLoc.y = 18;
+          multiBoxLoc.x = (valMain + 1);
+          multiBoxLoc.y = (valMain + 2);
           mergeBox = [1, 1, 2];
           break;
         }
         case "5": {
           stackCt = 0;
-          hi = 16;
+          hi = valMain;
           lo = 1;
           k = 0;
           i = 1; // i and j are starting valuse for lo and hi
-          j = 16;
+          j = valMain;
           multiBoxLoc.x = 1;
-          multiBoxLoc.y = 16;
+          multiBoxLoc.y = valMain;
           tempOn = true;
           break;
         }
@@ -476,10 +479,10 @@
             j = 2;
             i = 1;
             tempOn = true;
-          } else if (j == 17) {
+          } else if (j == (valMain + 1)) {
             multiBoxLoc.x = -1;
             multiBoxLoc.y - 1;
-            for (var x = 1; x <= 16; x++)
+            for (var x = 1; x <= valMain; x++)
               item[x] += 100;
             done = true;
             tempOn = false;
@@ -504,60 +507,69 @@
           } // end case 3
           break;
         case "4": // merge sort
-          if ((lo == 1) && (sortLength == 8)) {
-            for (var x = 1; x <= 16; x++)
+          if ((lo == 1) && (sortLength == (valMain / 2))) { // sortLength é o valMain / 2
+            console.log('caiu no 1 IF');
+            for (var x = 1; x <= valMain; x++)
               item[x] += 100;
             done = true;
           } else if (lo == 1) {
+            console.log('caiu no 2 IF');
             hi = hi + 1;
             sortLength = sortLength * 2;
-            k = 17;
+            k = (valMain + 1);
             i = 1;
             j = sortLength + 1;
             end_i = i + sortLength - 1;
             end_j = j + sortLength - 1;
-            multiBoxLoc.x = i + 16;
-            multiBoxLoc.y = end_j + 16;
+            multiBoxLoc.x = i + valMain;
+            multiBoxLoc.y = end_j + valMain;
             mergeBox = [i, end_i, end_j];
             lo = 0;
           } else if ((end_i < i) && (end_j < j)) {
-            if (k == 33) {
+            console.log('caiu no 3 IF');
+            if (k == ((valMain * 2) + 1)) {
+              console.log('caiu no 3/1 IF');
               multiBoxLoc.x = -1;
               multiBoxLoc.y = -1;
               mergeBox = [-1, -1, -1];
-              for (var n = 1; n < 17; n++) {
+              for (var n = 1; n < (valMain + 1); n++) {
                 actionQueue.push({
                   action: "copy",
-                  from: n + 16,
+                  from: n + valMain,
                   to: n,
                   delay: 100
                 });
               }
               lo = 1;
             } else {
+              console.log('caiu no 3/2 IF');
               end_i = end_i + 2 * sortLength;
               end_j = end_j + 2 * sortLength;
               j = end_i + 1;
               i = j - sortLength;
-              multiBoxLoc.x = i + 16;
-              multiBoxLoc.y = end_j + 16;
+              multiBoxLoc.x = i + valMain;
+              multiBoxLoc.y = end_j + valMain;
               mergeBox = [i, end_i, end_j];
             }
           } else if (end_i < i) {
+            console.log('caiu no 4 IF');
             putBoxes(-1, -1);
             copyItem(k, j);
             j = j + 1;
             k = k + 1;
           } else if (end_j < j) {
+            console.log('caiu no 5 IF');
             putBoxes(-1, -1);
             copyItem(k, i);
             i = i + 1;
             k = k + 1;
           } else if (greaterThan(i, j)) {
+            console.log('caiu no 5 IF');
             copyItem(k, j);
             j = j + 1;
             k = k + 1;
           } else {
+            console.log('caiu no ELSE');
             copyItem(k, i);
             i = i + 1;
             k = k + 1;
@@ -682,11 +694,11 @@
           valid = true;
           done = false;
           if (state == RUN)
-            timeout = setTimeout(frame, fast ? 100 : 1000);
+            timeout = setTimeout(frame, fast ? 10 : 1000);
         } else {
           scriptStep();
           if (!done && state == RUN)
-            timeout = setTimeout(frame, fast ? 100 : 1000);
+            timeout = setTimeout(frame, fast ? 10 : 1000);
         }
         if (done)
           setState(IDLE);
@@ -741,16 +753,16 @@
       if (!g.fillText) { // eliminate missing function error in excanvas.js for IE 8 and earlier
         g.fillText = function () {};
       }
-      g.font = "bold 11pt sans-serif";
+      // g.font = "bold 11pt sans-serif";
       width = canvas.width;
       height = canvas.height;
-      var x = (width - 20 + barGap) / 16;
+      var x = (width - 20 + barGap) / valMain;
       barWidth = x - barGap;
-      textAscent = 15;
-      leftOffset = (width - 16 * barWidth - 15 * barGap) / 2;
-      barHeight = (height - 40 - 2 * textAscent) / 2;
-      barIncrement = (barHeight - 3) / 17;
-      minBarHeight = barHeight - 17 * barIncrement;
+      textAscent = 5;
+      leftOffset = (width - valMain * barWidth - 60 * barGap) / 2;
+      barHeight = (height - 40) / 2;
+      barIncrement = (barHeight - 3) / (valMain + 1);
+      minBarHeight = barHeight - (valMain + 1) * barIncrement;
       firstRow_y = barHeight + 10;
       secondRow_y = 2 * barHeight + 25 + textAscent;
       $("#sortSelect").val(2);
@@ -772,21 +784,10 @@
   <noscript>
     <p style="color:red">Sorry, this program requires JavaScript to run.</p>
   </noscript>
-
-  <table align=center border=2 cellspacing=0 cellpadding=5>
-    <tr>
-      <td align=center>
-        Please switch links to the improved version at<br>
-        <a
-          href="http://math.hws.edu/eck/js/sorting/xSortLab.html">http://math.hws.edu/eck/js/sorting/xSortLab.html</a><br>
-        which includes instructions and timed sorting.
-      </td>
-    </tr>
-  </table>
   <br>
   <br>
   <div style="float:left;">
-    <canvas id="sortcanvas" width=600 height=300 style="background-color:rgb(230,230,255)"></canvas>
+    <canvas id="sortcanvas" width=1000 height=300 style="background-color:rgb(230,230,255)"></canvas>
   </div>
   <div style="float:left; margin-left:30px;">
     <p><select id="sortSelect">

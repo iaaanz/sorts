@@ -1,127 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-
-  <title></title>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-1.6.1.js" integrity="sha256-Du92qVg6bHoet2TTP+N2v+GGHfefq4LCw/XRYYPoIBY=" crossorigin="anonymous"></script>
+  <script src="sorts.js"></script>
 </head>
 
 <body class="bg-dark">
   <div class="container">
-    <div class="row justify-content-center align-items-center">
-      <div class="col-sm-2">
-        <input type="text" class="form-control" id="qtd" placeholder="Itens">
+    <form class="form-inline justify-content-center mt-2">
+      <div class="form-group mx-2">
+        <select class="custom-select">
+          <option selected disabled>Itens</option>
+          <option value="16">16</option>
+          <option value="32">32</option>
+          <option value="64">64</option>
+          <option value="128">128</option>
+          <option value="256">256</option>
+          <option value="524">524</option>
+        </select>
       </div>
-      <div class="col-sm-1">
-        <button class="btn btn-primary" onclick="genNumber()">Gerar</button>
-      </div>
-      <div class="col-auto my-1">
-        <button class="btn btn-success">Ordernar</button>
-      </div>
-    </div>
+      <button type="button" class="btn btn-primary mx-2">Gerar</button>
+      <button type="button" class="btn btn-success mx-2">Iniciar</button>
+      <button type="button" class="btn btn-warning mx-2">Resetar</button>
+    </form>
   </div>
-  <div class="container-fluid mt-3 container_graphics text-white">
+  <div class="container-fluid mt-5">
     <div class="row">
       <div class="col">
-        <!-- <div id="insertion" class="h-100 w-100 d-inline-block bg-white"> -->
-        <div id="insertion" class="">
-          <label for="">Insertion Sort</label>
-          <table class="table" id="insertTable" style="height: 300px;  width: 550px !important;">
-            <thead>
-              <tr>
-                <th scope="col"></th>
-                <!-- <th scope="col" class="bg-danger"></th>
-                <th scope="col" class="bg-primary"></th> -->
-              </tr>
-            </thead>
-          </table>
+        <div class="row">
+          <div class="col text-white">
+            <b> Bubble Sort - </b>
+            <label>Comparações:</label> <span id="compCt">0</span>
+            <b>/</b>
+            <label>Cópias: </label> <span id="moveCt">0</span>
+            <canvas id="sortcanvas1" width=700 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
+          </div>
+          <div class="col">
+            <p><select id="sortSelect">
+                <option value="1">Bubble Sort</option>
+                <option value="2">Selection Sort</option>
+                <option value="3">Insertion Sort</option>
+                <option value="4">Merge Sort</option>
+                <option value="5">Quick Sort</option>
+              </select></p>
+            <p><button id="newBtn">New Sort</button></p>
+            <p><input type=checkbox id="fastCheckbox"><label for="fastCheckbox">Fast</label></p>
+            <p><button id="runBtn">Run</button></p>
+            <p><button id="pauseBtn">Pause</button></p>
+            <p><button id="stepBtn">Step</button></p>
+          </div>
         </div>
       </div>
       <div class="col">
-        <label for="">Selection Sort</label>
-        <div id="selection" class="">
-          <table class="table" style="height: 300px;">
-            <thead>
-              <tr>
-                <th scope="col"></th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-      </div>
-      <div class="col">
-        <label for="">Bubble Sort</label>
-        <div id="bubble" class="">
-          <table class="table" style="height: 300px;">
-            <thead>
-              <tr>
-                <th scope="col"></th>
-              </tr>
-            </thead>
-          </table>
+        <div class="row">
+          <div class="col text-white">
+            <b> Selection Sort - </b>
+            <label>Comparações:</label> <span id="compCt">0</span>
+            <b>/</b>
+            <label>Cópias: </label> <span id="moveCt">0</span>
+            <canvas id="sortcanvas1" width=700 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
+          </div>
+          <div class="col">
+            <p><select id="sortSelect">
+                <option value="1">Bubble Sort</option>
+                <option value="2">Selection Sort</option>
+                <option value="3">Insertion Sort</option>
+                <option value="4">Merge Sort</option>
+                <option value="5">Quick Sort</option>
+              </select></p>
+            <p><button id="newBtn">New Sort</button></p>
+            <p><input type=checkbox id="fastCheckbox"><label for="fastCheckbox">Fast</label></p>
+            <p><button id="runBtn">Run</button></p>
+            <p><button id="pauseBtn">Pause</button></p>
+            <p><button id="stepBtn">Step</button></p>
+          </div>
         </div>
       </div>
     </div>
-    <div class="row mt-5" style="height: 400px;">
+    <div class="row mt-4">
       <div class="col">
-        <label for="">Merge Sort</label>
-        <div id="merge" class="">
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col"></th>
-              </tr>
-            </thead>
-          </table>
+        <div class="row">
+          <div class="col">
+            <canvas id="sortcanvas1" width=700 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
+          </div>
+          <div class="col">
+            <p><select id="sortSelect">
+                <option value="1">Bubble Sort</option>
+                <option value="2">Selection Sort</option>
+                <option value="3">Insertion Sort</option>
+                <option value="4">Merge Sort</option>
+                <option value="5">Quick Sort</option>
+              </select></p>
+            <!-- <p><button id="newBtn">New Sort</button></p>
+            <p><input type=checkbox id="fastCheckbox"><label for="fastCheckbox">Fast</label></p>
+            <p><button id="runBtn">Run</button></p>
+            <p><button id="pauseBtn">Pause</button></p>
+            <p><button id="stepBtn">Step</button></p> -->
+            <p style="margin-top:30px;">
+              <b>Comparações:</b> <span id="compCt">0</span>
+            </p>
+            <p style="margin-top:30px;">
+              <b>Cópias: </b> <span id="moveCt">0</span>
+            </p>
+          </div>
         </div>
       </div>
       <div class="col">
-        <label for="">Quick Sort</label>
-        <div id="quick" class="">
-          <table class="table">
-            <thead>
-              <tr>
-                <th scope="col"></th>
-              </tr>
-            </thead>
-          </table>
+        <div class="row">
+          <div class="col">
+            <canvas id="sortcanvas1" width=700 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
+          </div>
+          <div class="col">
+            <p><select id="sortSelect">
+                <option value="1">Bubble Sort</option>
+                <option value="2">Selection Sort</option>
+                <option value="3">Insertion Sort</option>
+                <option value="4">Merge Sort</option>
+                <option value="5">Quick Sort</option>
+              </select></p>
+            <!-- <p><button id="newBtn">New Sort</button></p>
+            <p><input type=checkbox id="fastCheckbox"><label for="fastCheckbox">Fast</label></p>
+            <p><button id="runBtn">Run</button></p>
+            <p><button id="pauseBtn">Pause</button></p>
+            <p><button id="stepBtn">Step</button></p> -->
+            <p style="margin-top:30px;">
+              <b>Comparações:</b> <span id="compCt">0</span>
+            </p>
+            <p style="margin-top:30px;">
+              <b>Cópias: </b> <span id="moveCt">0</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.js" integrity="sha512-n/4gHW3atM3QqRcbCn6ewmpxcLAHGaDjpEBu4xZd47N0W2oQ+6q7oc3PXstrJYXcbNU1OHdQ1T7pAP+gi5Yu8g==" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
-  <script>
-    function genNumber() {
-      $.ajax({
-        type: 'POST',
-        url: './sorts/generator.php',
-        dataType: 'JSON',
-        data: ({
-          qtd: $('#qtd').val()
-        }),
-        success: function(res) {
-          console.log('input:' + $('#qtd').val());
-          console.log(res[0].id);
-
-          let tb = "<th scope='col' class='bg-info'></th>";
-
-          $("#insertTable tr").append(tb);
-        }
-      }).done(data => {
-        // console.log('ajax');
-      }).fail(err => {
-        console.log('deu pau');
-        console.log(err);
-      })
-    }
-  </script>
 </body>
 
 </html>
