@@ -1,0 +1,71 @@
+32 colunas:
+  width = canvas.width;
+  height = canvas.height;
+  var x = (width + 5) / valMain;
+  barWidth = x - 3;
+  leftOffset = (width - valMain * barWidth - 30 * barGap) / 2;
+  barHeight = height - 20;
+  barIncrement = (barHeight - 3) / (valMain + 1);
+  minBarHeight = barHeight - (valMain + 1) * barIncrement;
+  firstRow_y = barHeight + 10;
+  secondRow_y = 2 * barHeight + 25;
+
+64 colunas:
+  width = canvas.width;
+  height = canvas.height;
+  var x = (width - 20 + barGap) / valMain;
+  barWidth = x - barGap;
+  leftOffset = (width - valMain * barWidth * 1.23) / 2;
+  barHeight = height - 20;
+  barIncrement = (barHeight - 3) / (valMain + 1);
+  minBarHeight = barHeight - (valMain + 1) * barIncrement;
+  firstRow_y = barHeight + 10;
+  secondRow_y = 2 * barHeight + 25;
+
+128:
+  width = canvas.width;
+  height = canvas.height;
+  var x = (width - 20 + barGap) / valMain;
+  barWidth = x - barGap;
+  leftOffset = (width - valMain * barWidth * 1.6) / 2;
+  barHeight = height - 20;
+  barIncrement = (barHeight - 3) / (valMain + 1);
+  minBarHeight = barHeight - (valMain + 1) * barIncrement;
+  firstRow_y = barHeight + 10;
+  secondRow_y = 2 * barHeight + 25;
+
+256:
+  width = canvas.width;
+  height = canvas.height;
+  var x = (width - 20 + barGap) / valMain;
+  barWidth = x - barGap;
+  leftOffset = (width - valMain * barWidth * 4) / 2;
+  barHeight = height - 20;
+  barIncrement = (barHeight - 3) / (valMain + 1);
+  minBarHeight = barHeight - (valMain + 1) * barIncrement;
+  firstRow_y = barHeight + 10;
+  secondRow_y = 2 * barHeight + 25;
+
+524:
+  width = canvas.width;
+  height = canvas.height;
+  var x = (width - 20 + barGap) / valMain;
+  barWidth = x - barGap;
+  leftOffset = (width - valMain * barWidth * -1.86) / 2;
+  barHeight = height - 20;
+  barIncrement = (barHeight - 3) / (valMain + 1);
+  minBarHeight = barHeight - (valMain + 1) * barIncrement;
+  firstRow_y = barHeight + 10;
+  secondRow_y = 2 * barHeight + 25;
+
+1024:
+  width = canvas.width;
+  height = canvas.height;
+  var x = (width - 20 + barGap) / valMain;
+  barWidth = x - barGap;
+  leftOffset = (width - valMain * barWidth * -0.5) / 2;
+  barHeight = height - 20;
+  barIncrement = (barHeight - 3) / (valMain + 1);
+  minBarHeight = barHeight - (valMain + 1) * barIncrement;
+  firstRow_y = barHeight + 10;
+  secondRow_y = 2 * barHeight + 25;

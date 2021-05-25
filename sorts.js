@@ -1,8 +1,8 @@
-var valMain = 64; // Antigo 16
+const valMain = 32;
 var resizeCol;
 
 var borderColor = '#DDD'; // I would use 'const', not 'var', but it breaks in IE
-var barColor = '#888';
+var barColor = '#000';
 var finishedBarColor = '#000';
 var movingBarColor = '#DDD';
 var movingBarOutlineColor = '#888';
@@ -18,12 +18,13 @@ var RUN = 2;
 var STEPPING = 3;
 var PAUSED = 4;
 
+var selectedSort = '';
 var state = IDLE;
 
 var g; // graphic context for drawing on the canvas.
 var width, height; // width and height of the canvas.
 
-var barWidth, barHeight, minBarHeight, barIncrement; // measurements used for drawing.
+var barWidth, barHeight, minBarHeight, barIncrement; // measurements used for drawinbubble.
 var leftOffset, firstRow_y, secondRow_y, textAscent;
 
 var method; // The sorting method that is being used, coded as 1,2,3,4,5; controlled by a select element.
@@ -64,10 +65,11 @@ function stopRunning() {
   }
 }
 
-function setState(newState) {
+function setState(newState, newSort) {
   // called whenever the state changes; sets enabled/disabled status of various elements.
   state = newState;
-  $('#runBtn').attr(
+  selectedSort = newSort;
+  $('#runBtn1').attr(
     'disabled',
     state == RUN || state == IDLE || state == STEPPING
   );
@@ -117,6 +119,8 @@ function newSort() {
   copyCt = 0;
   valid = false;
   draw();
+  // bubbleDraw();
+  selectionDraw();
 }
 
 //-------------------------------- Drawing ------------------------------------------
@@ -128,10 +132,10 @@ function putItem(i) {
   var x, y, ht;
   if (h > valMain) {
     ht = (h - resizeCol) * barIncrement + minBarHeight;
-    g.fillStyle = finishedBarColor;
+    bubble.fillStyle = '#F00';
   } else {
     ht = h * barIncrement + minBarHeight;
-    g.fillStyle = barColor;
+    bubble.fillStyle = barColor;
   }
   if (i == 0) {
     x = leftOffset + ((barWidth + barGap) * 25) / 2;
@@ -144,11 +148,68 @@ function putItem(i) {
     y = secondRow_y - ht;
   }
   try {
-    g.fillRect(x, y, barWidth, ht);
-    g.strokeStyle = finishedBarColor;
-    g.strokeRect(x, y, barWidth, ht);
+    bubble.fillRect(x, y, barWidth + 2.5, ht); // Desenha a coluna
+    bubble.strokeStyle = finishedBarColor;
   } catch (e) {
-    // (Got an error during development when item[i] was undefined.  Shouldn't happen again. :-)
+    if (timeout != null) timeout.cancel();
+    setState(IDLE);
+    alert('Internal error while drawing!!??');
+  }
+}
+function bubblePutItem(i) {
+  var h = item[i];
+  var x, y, ht;
+  if (h > valMain) {
+    ht = (h - resizeCol) * barIncrement + minBarHeight;
+    bubble.fillStyle = '#F00';
+  } else {
+    ht = h * barIncrement + minBarHeight;
+    bubble.fillStyle = barColor;
+  }
+  if (i == 0) {
+    x = leftOffset + ((barWidth + barGap) * 25) / 2;
+    y = secondRow_y - ht;
+  } else if (i < valMain + 1) {
+    x = leftOffset + (i - 1) * (barWidth + barGap);
+    y = firstRow_y - ht;
+  } else {
+    x = leftOffset + (i - (valMain + 1)) * (barWidth + barGap);
+    y = secondRow_y - ht;
+  }
+  try {
+    bubble.fillRect(x, y, barWidth + 2.5, ht); // Desenha a coluna
+    bubble.strokeStyle = finishedBarColor;
+  } catch (e) {
+    if (timeout != null) timeout.cancel();
+    setState(IDLE);
+    alert('Internal error while drawing!!??');
+  }
+}
+function selectionPutItem(i) {
+  var h = item[i];
+  if (h == -1) return;
+  var x, y, ht;
+  if (h > valMain) {
+    ht = (h - resizeCol) * barIncrement + minBarHeight;
+    selection.fillStyle = '#F00';
+  } else {
+    ht = h * barIncrement + minBarHeight;
+    selection.fillStyle = barColor;
+  }
+  if (i == 0) {
+    x = leftOffset + ((barWidth + barGap) * 25) / 2;
+    y = secondRow_y - ht;
+  } else if (i < valMain + 1) {
+    x = leftOffset + (i - 1) * (barWidth + barGap);
+    y = firstRow_y - ht;
+  } else {
+    x = leftOffset + (i - (valMain + 1)) * (barWidth + barGap);
+    y = secondRow_y - ht;
+  }
+  try {
+    selection.fillRect(x, y, barWidth + 2.5, ht); // Desenha a coluna
+    selection.strokeStyle = finishedBarColor;
+  } catch (e) {
     if (timeout != null) timeout.cancel();
     setState(IDLE);
     alert('Internal error while drawing!!??');
@@ -158,28 +219,78 @@ function putItem(i) {
 function drawMovingItem() {
   // Draws an item that is being moved to animate the copying of an item from one place to another.
   var ht = movingItem * barIncrement + minBarHeight;
-  g.fillStyle = movingBarColor;
-  g.fillRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
-  g.strokeColor = movingBarOutlineColor;
-  g.strokeRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
+  bubble.fillStyle = movingBarColor;
+  bubble.fillRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
+  bubble.strokeColor = movingBarOutlineColor;
+  bubble.strokeRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
+}
+function bubbleDrawMovingItem() {
+  // Draws an item that is being moved to animate the copying of an item from one place to another.
+  var ht = movingItem * barIncrement + minBarHeight;
+  bubble.fillStyle = movingBarColor;
+  bubble.fillRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
+  bubble.strokeColor = movingBarOutlineColor;
+  bubble.strokeRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
+}
+function selectionDrawMovingItem() {
+  // Draws an item that is being moved to animate the copying of an item from one place to another.
+  var ht = movingItem * barIncrement + minBarHeight;
+  selection.fillStyle = movingBarColor;
+  selection.fillRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
+  selection.strokeColor = movingBarOutlineColor;
+  selection.strokeRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
 }
 
 function drawMax() {
   // Writes "Max" under one of the items, with an arrow pointing to the item.
-  // var sw = 30; // (guess at string width)
-  // var x = leftOffset + (maxLoc - 1) * (barWidth + barGap) + barWidth / 2;
-  // var y = firstRow_y + 38 + textAscent;
-  // g.fillStyle = maxColor;
-  // g.fillText('Maior', x - sw / 2, y + textAscent);
-  // g.strokeStyle = maxColor;
-  // g.beginPath();
-  // g.moveTo(x, y);
-  // g.lineTo(x, y - 29);
-  // g.moveTo(x, y - 29);
-  // g.lineTo(x + 6, y - 24);
-  // g.moveTo(x, y - 29);
-  // g.lineTo(x - 6, y - 24);
-  // g.stroke();
+  var sw = 30; // (guess at string width)
+  var x = leftOffset + (maxLoc - 1) * (barWidth + barGap) + barWidth / 2;
+  var y = firstRow_y + 38 + textAscent;
+  bubble.fillStyle = maxColor;
+  bubble.fillText('Maior', x - sw / 2, y + textAscent);
+  bubble.strokeStyle = maxColor;
+  bubble.beginPath();
+  bubble.moveTo(x, y);
+  bubble.lineTo(x, y - 29);
+  bubble.moveTo(x, y - 29);
+  bubble.lineTo(x + 6, y - 24);
+  bubble.moveTo(x, y - 29);
+  bubble.lineTo(x - 6, y - 24);
+  bubble.stroke();
+}
+function bubbleDrawMax() {
+  // Writes "Max" under one of the items, with an arrow pointing to the item.
+  var sw = 30; // (guess at string width)
+  var x = leftOffset + (maxLoc - 1) * (barWidth + barGap) + barWidth / 2;
+  var y = firstRow_y + 38 + textAscent;
+  bubble.fillStyle = maxColor;
+  bubble.fillText('Maior', x - sw / 2, y + textAscent);
+  bubble.strokeStyle = maxColor;
+  bubble.beginPath();
+  bubble.moveTo(x, y);
+  bubble.lineTo(x, y - 29);
+  bubble.moveTo(x, y - 29);
+  bubble.lineTo(x + 6, y - 24);
+  bubble.moveTo(x, y - 29);
+  bubble.lineTo(x - 6, y - 24);
+  bubble.stroke();
+}
+function selectionDrawMax() {
+  // Writes "Max" under one of the items, with an arrow pointing to the item.
+  var sw = 30; // (guess at string width)
+  var x = leftOffset + (maxLoc - 1) * (barWidth + barGap) + barWidth / 2;
+  var y = firstRow_y + 38 + textAscent;
+  selection.fillStyle = maxColor;
+  selection.fillText('Maior', x - sw / 2, y + textAscent);
+  selection.strokeStyle = maxColor;
+  selection.beginPath();
+  selection.moveTo(x, y);
+  selection.lineTo(x, y - 29);
+  selection.moveTo(x, y - 29);
+  selection.lineTo(x + 6, y - 24);
+  selection.moveTo(x, y - 29);
+  selection.lineTo(x - 6, y - 24);
+  selection.stroke();
 }
 
 function drawBox(boxLoc) {
@@ -195,8 +306,40 @@ function drawBox(boxLoc) {
     x = leftOffset + (boxLoc - (valMain + 1)) * (barWidth + barGap);
     y = secondRow_y;
   }
-  g.strokeStyle = boxColor;
-  g.strokeRect(x - 2, y - barHeight - 2, barWidth + 4, barHeight + 4);
+  bubble.strokeStyle = boxColor;
+  bubble.strokeRect(x - 2, y - barHeight - 2, barWidth + 4, barHeight + 4);
+}
+function bubbleDrawBox(boxLoc) {
+  // draws a box aroud one of the items (indicated by boxLoc)
+  var x, y;
+  if (boxLoc == 0) {
+    x = leftOffset + ((barWidth + barGap) * 25) / 2;
+    y = secondRow_y;
+  } else if (boxLoc < valMain + 1) {
+    x = leftOffset + (boxLoc - 1) * (barWidth + barGap);
+    y = firstRow_y;
+  } else {
+    x = leftOffset + (boxLoc - (valMain + 1)) * (barWidth + barGap);
+    y = secondRow_y;
+  }
+  bubble.strokeStyle = boxColor;
+  bubble.strokeRect(x - 2, y - barHeight - 2, barWidth + 4, barHeight + 4);
+}
+function selectionDrawBox(boxLoc) {
+  // draws a box aroud one of the items (indicated by boxLoc)
+  var x, y;
+  if (boxLoc == 0) {
+    x = leftOffset + ((barWidth + barGap) * 25) / 2;
+    y = secondRow_y;
+  } else if (boxLoc < valMain + 1) {
+    x = leftOffset + (boxLoc - 1) * (barWidth + barGap);
+    y = firstRow_y;
+  } else {
+    x = leftOffset + (boxLoc - (valMain + 1)) * (barWidth + barGap);
+    y = secondRow_y;
+  }
+  selection.strokeStyle = boxColor;
+  selection.strokeRect(x - 2, y - barHeight - 2, barWidth + 4, barHeight + 4);
 }
 
 function drawMultiBox() {
@@ -210,8 +353,36 @@ function drawMultiBox() {
     x = leftOffset + (multiBoxLoc.x - (valMain + 1)) * (barWidth + barGap);
   }
   wd = (multiBoxLoc.y - multiBoxLoc.x) * (barGap + barWidth) + barWidth;
-  g.strokeStyle = multiBoxColor;
-  g.strokeRect(x - 4, y - barHeight - 4, wd + 8, barHeight + 8);
+  bubble.strokeStyle = multiBoxColor;
+  bubble.strokeRect(x - 4, y - barHeight - 4, wd + 8, barHeight + 8);
+}
+function bubbleDrawMultiBox() {
+  // draws a box around items number multiBoxLoc.x through multiBoxLoc.y
+  var x, y, wd;
+  if (multiBoxLoc.x < valMain + 1) {
+    y = firstRow_y;
+    x = leftOffset + (multiBoxLoc.x - 1) * (barWidth + barGap);
+  } else {
+    y = secondRow_y;
+    x = leftOffset + (multiBoxLoc.x - (valMain + 1)) * (barWidth + barGap);
+  }
+  wd = (multiBoxLoc.y - multiBoxLoc.x) * (barGap + barWidth) + barWidth;
+  bubble.strokeStyle = multiBoxColor;
+  bubble.strokeRect(x - 4, y - barHeight - 4, wd + 8, barHeight + 8);
+}
+function selectionDrawMultiBox() {
+  // draws a box around items number multiBoxLoc.x through multiBoxLoc.y
+  var x, y, wd;
+  if (multiBoxLoc.x < valMain + 1) {
+    y = firstRow_y;
+    x = leftOffset + (multiBoxLoc.x - 1) * (barWidth + barGap);
+  } else {
+    y = secondRow_y;
+    x = leftOffset + (multiBoxLoc.x - (valMain + 1)) * (barWidth + barGap);
+  }
+  wd = (multiBoxLoc.y - multiBoxLoc.x) * (barGap + barWidth) + barWidth;
+  selection.strokeStyle = multiBoxColor;
+  selection.strokeRect(x - 4, y - barHeight - 4, wd + 8, barHeight + 8);
 }
 
 function drawMergeListBoxes() {
@@ -221,25 +392,26 @@ function drawMergeListBoxes() {
   x = leftOffset + (mergeBox[0] - 1) * (barWidth + barGap);
   wd1 = (mergeBox[1] - mergeBox[0]) * (barGap + barWidth) + barWidth;
   wd2 = (mergeBox[2] - mergeBox[0]) * (barGap + barWidth) + barWidth;
-  g.strokeStyle = multiBoxColor;
-  g.strokeRect(x - 4, y - barHeight - 4, wd1 + 8, barHeight + 8);
-  g.strokeRect(x - 4, y - barHeight - 4, wd2 + 8, barHeight + 8);
+  bubble.strokeStyle = multiBoxColor;
+  bubble.strokeRect(x - 4, y - barHeight - 4, wd1 + 8, barHeight + 8);
+  bubble.strokeRect(x - 4, y - barHeight - 4, wd2 + 8, barHeight + 8);
 }
 
 function draw() {
   // Completely redraws the canvas to show the current state.
-  g.clearRect(0, 0, width, height);
-  g.strokeStyle = borderColor;
-  g.strokeRect(0, 0, width, height);
-  g.strokeRect(1, 1, width - 2, height - 2);
+  bubble.clearRect(0, 0, width, height);
+  bubble.strokeStyle = borderColor;
+  bubble.strokeRect(0, 0, width, height);
+  bubble.strokeRect(1, 1, width - 2, height - 2);
+
   for (var i = 1; i <= valMain; i++) putItem(i);
 
   // Código que insere os números em baixo das barras
 
-  // g.fillStyle = borderColor;
+  // sort.fillStyle = borderColor;
   // for (var i = 1; i <= valMain; i++) {
   //   var sw = i < 10 ? 6 : 12;
-  //   g.fillText(
+  //   sort.fillText(
   //     '' + i,
   //     leftOffset + (i - 1) * (barWidth + barGap) + (barWidth - sw) / 2,
   //     firstRow_y + 6 + textAscent
@@ -247,22 +419,57 @@ function draw() {
   // }
 
   for (var i = valMain + 1; i <= valMain * 2; i++) putItem(i);
-  if (tempOn) {
-    g.fillStyle = borderColor;
-    var sw = 40;
-    g.fillText(
-      'Temp',
-      leftOffset + (valMain * barWidth + 25 * barGap - sw) / 2,
-      secondRow_y + 5 + textAscent
-    );
-    putItem(0);
-  }
+
+  // Desenha a variável temporária
+
+  // if (tempOn) {
+  //   bubble.fillStyle = borderColor;
+  //   var sw = 40;
+  //   bubble.fillText(
+  //     'Temp',
+  //     leftOffset + (valMain * barWidth + 25 * barGap - sw) / 2,
+  //     secondRow_y + 5 + textAscent
+  //   );
+  //   putItem(0);
+  // }
+
   if (maxLoc >= 0) drawMax();
   if (box1Loc >= 0) drawBox(box1Loc);
-  if (box2Loc >= 0) drawBox(box2Loc);
+
+  // Desenha a box rosa nas colunas da segunda linha
+  // if (box2Loc >= 0) drawBox(box2Loc);
+
   if (multiBoxLoc.x > 0) drawMultiBox();
   if (mergeBox[0] > 0) drawMergeListBoxes();
   if (movingItem >= 0) drawMovingItem();
+}
+function bubbleDraw() {
+  bubble.clearRect(0, 0, width, height);
+  bubble.strokeStyle = borderColor;
+  bubble.strokeRect(0, 0, width, height);
+  bubble.strokeRect(1, 1, width - 2, height - 2);
+
+  for (var i = 1; i <= valMain; i++) bubblePutItem(i);
+  for (var i = valMain + 1; i <= valMain * 2; i++) bubblePutItem(i);
+
+  if (maxLoc >= 0) bubbleDrawMax();
+  if (box1Loc >= 0) bubbleDrawBox(box1Loc);
+  if (multiBoxLoc.x > 0) bubbleDrawMultiBox();
+  if (movingItem >= 0) bubbleDrawMovingItem();
+}
+function selectionDraw() {
+  selection.clearRect(0, 0, width, height);
+  selection.strokeStyle = borderColor;
+  selection.strokeRect(0, 0, width, height);
+  selection.strokeRect(1, 1, width - 2, height - 2);
+
+  for (var i = 1; i <= valMain; i++) selectionPutItem(i);
+  for (var i = valMain + 1; i <= valMain * 2; i++) selectionPutItem(i);
+
+  if (maxLoc >= 0) selectionDrawMax();
+  if (box1Loc >= 0) selectionDrawBox(box1Loc);
+  if (multiBoxLoc.x > 0) selectionDrawMultiBox();
+  if (movingItem >= 0) selectionDrawMovingItem();
 }
 
 // ---------------------------- Stepping through the sorts ------------------------------
@@ -362,7 +569,7 @@ function putBoxes(itemA, itemB) {
 
 function scriptSetup() {
   // The first step in a sort
-  method = $('#sortSelect').val();
+  method = selectedSort;
   switch (method) {
     case '1': {
       j = valMain;
@@ -416,9 +623,11 @@ function scriptStep() {
   // Do one step in a sort.  (A very long function!)
   switch (method) {
     case '1': // bubble sort
+      console.log(i, j);
       if (i == j) {
         putBoxes(-1, -1);
         if (j == 2) {
+          console.log('cabo');
           done = true;
           // tempOn = false;
           item[1] = resizeCol + item[1];
@@ -662,7 +871,7 @@ function doAction(what) {
       copyCt++;
       $('#moveCt').html('' + copyCt);
       break;
-    case 'startmove': //alert("start move " + what.from);
+    case 'startmove':
       movingItem = item[what.from];
       item[what.from] = -1;
       movingItemLoc.x = what.x;
@@ -672,7 +881,7 @@ function doAction(what) {
       movingItemLoc.x = what.x;
       movingItemLoc.y = what.y;
       break;
-    case 'donemove': //alert("end move " + what.to + "," + movingItem);
+    case 'donemove':
       item[what.to] = movingItem;
       movingItem = -1;
       copyCt++;
@@ -688,7 +897,6 @@ function doAction(what) {
 }
 
 function frame() {
-  // Seta o delay
   timeout = null;
   fast = $('#fastCheckbox').attr('checked');
   if (actionQueue.length > 0) {
@@ -713,72 +921,108 @@ function frame() {
   }
   if (done && actionQueue.length == 0) setState(IDLE);
   else if (state == STEPPING && actionQueue.length == 0) setState(PAUSED);
-  draw();
+  if (selectedSort == '1') bubbleDraw();
+  if (selectedSort == '2') selectionDraw();
+  if (selectedSort == '3') bubbleDraw();
+  if (selectedSort == '4') bubbleDraw();
+  if (selectedSort == '5') bubbleDraw();
 }
 
 // ---------------------------- Control and Initialization -------------------------------
 
-function doRun() {
-  // handler for "Run" button
-  if (state == RUN || state == IDLE || state == STEPPING) return; // won't happen if button enable/disable is functioning
-  setState(RUN);
+function doRun(sort) {
+  if (state == RUN || state == IDLE || state == STEPPING) return;
+  setState(RUN, sort);
   frame();
 }
-
-function doStep() {
-  // handler for "Step" button
-  if (state == RUN || state == IDLE || state == STEPPING) return; // won't happen if button enable/disable is functioning
-  setState(STEPPING);
+function doStep(sort) {
+  if (state == RUN || state == IDLE || state == STEPPING) return;
+  setState(STEPPING, sort);
   frame();
 }
-
-function doPause() {
-  // handler for "Pause" button
-  if (state != RUN) return; // won't happen if button enable/disable is functioning
+function doPause(sort) {
+  if (state != RUN) return;
   stopRunning();
-  setState(PAUSED);
-  draw();
+  setState(PAUSED, sort);
+  bubbleDraw();
 }
-
 function doNew() {
   // handler for "New" button
   newSort();
 }
 
-$(function () {
-  var canvas = document.getElementById('sortcanvas1');
-  var canvas2 = document.getElementById('sortcanvas2');
+function bubbleCanva() {
+  var bubbleCanvas = document.getElementById('bubbleCanvas');
+  bubble = bubbleCanvas.getContext('2d');
 
-  // g1 = canvas.getContext("2d");
-  // if (!g1.fillText) {
-  //   g1.fillText = function() {};
-  // }
-
-  g = canvas.getContext('2d');
-  if (!g.fillText) {
-    g.fillText = function () {};
-  }
-
-  // g.font = 'bold 11pt sans-serif';
-  width = canvas.width;
-  height = canvas.height;
-  var x = (width - 20 + barGap) / valMain;
-  barWidth = x - barGap;
-  textAscent = 5;
-  leftOffset = (width - valMain * barWidth - 60 * barGap) / 2;
-  barHeight = (height - 40) / 2;
+  width = bubbleCanvas.width;
+  height = bubbleCanvas.height;
+  var x = (width + 5) / valMain;
+  barWidth = x - 3;
+  leftOffset = (width - valMain * barWidth - 30 * barGap) / 2;
+  barHeight = height - 20;
   barIncrement = (barHeight - 3) / (valMain + 1);
   minBarHeight = barHeight - (valMain + 1) * barIncrement;
   firstRow_y = barHeight + 10;
-  secondRow_y = 2 * barHeight + 25 + textAscent;
-  $('#sortSelect').val(2);
+  secondRow_y = 2 * barHeight + 25;
+
+  // $('#sortSelect').val(1);
   $('#fastCheckbox').attr('checked', false);
-  $('#runBtn').click(doRun);
-  $('#stepBtn').click(doStep);
-  $('#pauseBtn').click(doPause);
+  $('#runBtn1').click(() => {
+    doRun('1');
+  });
+  $('#stepBtn').click(() => {
+    doStep('1');
+  });
+  $('#pauseBtn').click(() => {
+    doPause('1');
+  });
   $('#newBtn').click(doNew);
   $('#fastCheckbox').change(function () {
     if ($('#fastCheckbox').attr('checked'));
   });
+}
+
+function selectionCanva() {
+  var selectionCanvas = document.getElementById('selectionCanvas');
+  selection = selectionCanvas.getContext('2d');
+
+  width = selectionCanvas.width;
+  height = selectionCanvas.height;
+  var x = (width + 5) / valMain;
+  barWidth = x - 3;
+  leftOffset = (width - valMain * barWidth - 30 * barGap) / 2;
+  barHeight = height - 20;
+  barIncrement = (barHeight - 3) / (valMain + 1);
+  minBarHeight = barHeight - (valMain + 1) * barIncrement;
+  firstRow_y = barHeight + 10;
+  secondRow_y = 2 * barHeight + 25;
+
+  // $('#sortSelect').val(2);
+  $('#fastCheckbox').attr('checked', false);
+  $('#runBtn2').click(() => {
+    doRun('2');
+  });
+  $('#stepBtn').click(() => {
+    doStep('2');
+  });
+  $('#pauseBtn').click(() => {
+    doPause('2');
+  });
+  $('#newBtn').click(doNew);
+  $('#fastCheckbox').change(function () {
+    if ($('#fastCheckbox').attr('checked'));
+  });
+}
+
+function insertionCanva() {}
+
+function mergeCanva() {}
+
+function quickCanva() {}
+
+$(document).ready(function () {
+  bubbleCanva();
+  selectionCanva();
   newSort();
 });
