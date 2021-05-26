@@ -112,11 +112,16 @@ function newSort() {
   for (var i = VAL_MAIN + 1; i < VAL_MAIN * 2 + 1; i++) item[i] = -1;
   $('#bubbleCompCt').html('0');
   $('#bubbleMoveCt').html('0');
+  $('#selectionCompCt').html('0');
+  $('#selectionMoveCt').html('0');
+  $('#quickCompCt').html('0');
+  $('#quickMoveCt').html('0');
   compCt = 0;
   moveCt = 0;
   valid = false;
   bubbleDraw();
   selectionDraw();
+  quickDraw();
 }
 
 //-------------------------------- Drawing ------------------------------------------
@@ -212,6 +217,36 @@ function selectionPutItem(i) {
     alert('Internal error while drawing!!??');
   }
 }
+function quickPutItem(i) {
+  var h = item[i];
+  if (h == -1) return;
+  var x, y, ht;
+  if (h > VAL_MAIN) {
+    ht = (h - resizeCol) * barIncrement + minBarHeight;
+    quick.fillStyle = '#F00';
+  } else {
+    ht = h * barIncrement + minBarHeight;
+    quick.fillStyle = barColor;
+  }
+  if (i == 0) {
+    x = leftOffset + ((barWidth + barGap) * 25) / 2;
+    y = secondRow_y - ht;
+  } else if (i < VAL_MAIN + 1) {
+    x = leftOffset + (i - 1) * (barWidth + barGap);
+    y = firstRow_y - ht;
+  } else {
+    x = leftOffset + (i - (VAL_MAIN + 1)) * (barWidth + barGap);
+    y = secondRow_y - ht;
+  }
+  try {
+    quick.fillRect(x, y, barWidth + 2.5, ht); // Desenha a coluna
+    quick.strokeStyle = finishedBarColor;
+  } catch (e) {
+    if (timeout != null) timeout.cancel();
+    setState(IDLE);
+    alert('Internal error while drawing!!??');
+  }
+}
 
 // Template
 function drawMovingItem() {
@@ -222,22 +257,14 @@ function drawMovingItem() {
   bubble.strokeColor = movingBarOutlineColor;
   bubble.strokeRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
 }
-function bubbleDrawMovingItem() {
-  // Draws an item that is being moved to animate the copying of an item from one place to another.
-  var ht = movingItem * barIncrement + minBarHeight;
-  bubble.fillStyle = movingBarColor;
-  bubble.fillRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
-  bubble.strokeColor = movingBarOutlineColor;
-  bubble.strokeRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
-}
-function selectionDrawMovingItem() {
-  // Draws an item that is being moved to animate the copying of an item from one place to another.
-  var ht = movingItem * barIncrement + minBarHeight;
-  selection.fillStyle = movingBarColor;
-  selection.fillRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
-  selection.strokeColor = movingBarOutlineColor;
-  selection.strokeRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
-}
+// function bubbleDrawMovingItem() {
+//   // Draws an item that is being moved to animate the copying of an item from one place to another.
+//   var ht = movingItem * barIncrement + minBarHeight;
+//   bubble.fillStyle = movingBarColor;
+//   bubble.fillRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
+//   bubble.strokeColor = movingBarOutlineColor;
+//   bubble.strokeRect(movingItemLoc.x, movingItemLoc.y - ht, barWidth, ht);
+// }
 
 // Template
 function drawMax() {
@@ -256,40 +283,6 @@ function drawMax() {
   bubble.moveTo(x, y - 29);
   bubble.lineTo(x - 6, y - 24);
   bubble.stroke();
-}
-function bubbleDrawMax() {
-  // Writes "Max" under one of the items, with an arrow pointing to the item.
-  var sw = 30; // (guess at string width)
-  var x = leftOffset + (maxLoc - 1) * (barWidth + barGap) + barWidth / 2;
-  var y = firstRow_y + 38 + textAscent;
-  bubble.fillStyle = maxColor;
-  bubble.fillText('Maior', x - sw / 2, y + textAscent);
-  bubble.strokeStyle = maxColor;
-  bubble.beginPath();
-  bubble.moveTo(x, y);
-  bubble.lineTo(x, y - 29);
-  bubble.moveTo(x, y - 29);
-  bubble.lineTo(x + 6, y - 24);
-  bubble.moveTo(x, y - 29);
-  bubble.lineTo(x - 6, y - 24);
-  bubble.stroke();
-}
-function selectionDrawMax() {
-  // Writes "Max" under one of the items, with an arrow pointing to the item.
-  var sw = 30; // (guess at string width)
-  var x = leftOffset + (maxLoc - 1) * (barWidth + barGap) + barWidth / 2;
-  var y = firstRow_y + 38 + textAscent;
-  selection.fillStyle = maxColor;
-  selection.fillText('Maior', x - sw / 2, y + textAscent);
-  selection.strokeStyle = maxColor;
-  selection.beginPath();
-  selection.moveTo(x, y);
-  selection.lineTo(x, y - 29);
-  selection.moveTo(x, y - 29);
-  selection.lineTo(x + 6, y - 24);
-  selection.moveTo(x, y - 29);
-  selection.lineTo(x - 6, y - 24);
-  selection.stroke();
 }
 
 // Template
@@ -341,6 +334,22 @@ function selectionDrawBox(boxLoc) {
   selection.strokeStyle = boxColor;
   selection.strokeRect(x - 2, y - barHeight - 2, barWidth + 4, barHeight + 4);
 }
+function quickDrawBox(boxLoc) {
+  // draws a box aroud one of the items (indicated by boxLoc)
+  var x, y;
+  if (boxLoc == 0) {
+    x = leftOffset + ((barWidth + barGap) * 25) / 2;
+    y = secondRow_y;
+  } else if (boxLoc < VAL_MAIN + 1) {
+    x = leftOffset + (boxLoc - 1) * (barWidth + barGap);
+    y = firstRow_y;
+  } else {
+    x = leftOffset + (boxLoc - (VAL_MAIN + 1)) * (barWidth + barGap);
+    y = secondRow_y;
+  }
+  quick.strokeStyle = boxColor;
+  quick.strokeRect(x - 2, y - barHeight - 2, barWidth + 4, barHeight + 4);
+}
 
 // Template
 function drawMultiBox() {
@@ -371,7 +380,7 @@ function bubbleDrawMultiBox() {
   bubble.strokeStyle = multiBoxColor;
   bubble.strokeRect(x - 4, y - barHeight - 4, wd + 8, barHeight + 8);
 }
-function selectionDrawMultiBox() {
+function quickDrawMultiBox() {
   // draws a box around items number multiBoxLoc.x through multiBoxLoc.y
   var x, y, wd;
   if (multiBoxLoc.x < VAL_MAIN + 1) {
@@ -382,8 +391,8 @@ function selectionDrawMultiBox() {
     x = leftOffset + (multiBoxLoc.x - (VAL_MAIN + 1)) * (barWidth + barGap);
   }
   wd = (multiBoxLoc.y - multiBoxLoc.x) * (barGap + barWidth) + barWidth;
-  selection.strokeStyle = multiBoxColor;
-  selection.strokeRect(x - 4, y - barHeight - 4, wd + 8, barHeight + 8);
+  quick.strokeStyle = multiBoxColor;
+  quick.strokeRect(x - 4, y - barHeight - 4, wd + 8, barHeight + 8);
 }
 
 function drawMergeListBoxes() {
@@ -399,7 +408,7 @@ function drawMergeListBoxes() {
 }
 
 // Template
-function draw() {
+function defaultDraw() {
   // Completely redraws the canvas to show the current state.
   bubble.clearRect(0, 0, width, height);
   bubble.strokeStyle = borderColor;
@@ -454,10 +463,10 @@ function bubbleDraw() {
   for (var i = 1; i <= VAL_MAIN; i++) bubblePutItem(i);
   for (var i = VAL_MAIN + 1; i <= VAL_MAIN * 2; i++) bubblePutItem(i);
 
-  if (maxLoc >= 0) bubbleDrawMax();
   if (box1Loc >= 0) bubbleDrawBox(box1Loc);
-  if (multiBoxLoc.x > 0) bubbleDrawMultiBox();
-  if (movingItem >= 0) bubbleDrawMovingItem();
+
+  // Faz a animação das barras indo para segunda linhe e voltando
+  // if (movingItem >= 0) bubbleDrawMovingItem();
 }
 function selectionDraw() {
   selection.clearRect(0, 0, width, height);
@@ -468,11 +477,22 @@ function selectionDraw() {
   for (var i = 1; i <= VAL_MAIN; i++) selectionPutItem(i);
   for (var i = VAL_MAIN + 1; i <= VAL_MAIN * 2; i++) selectionPutItem(i);
 
-  if (maxLoc >= 0) selectionDrawMax();
   if (box1Loc >= 0) selectionDrawBox(box1Loc);
-  if (multiBoxLoc.x > 0) selectionDrawMultiBox();
-  if (movingItem >= 0) selectionDrawMovingItem();
 }
+function quickDraw() {
+  quick.clearRect(0, 0, width, height);
+  quick.strokeStyle = borderColor;
+  quick.strokeRect(0, 0, width, height);
+  quick.strokeRect(1, 1, width - 2, height - 2);
+
+  for (var i = 1; i <= VAL_MAIN; i++) quickPutItem(i);
+  for (var i = VAL_MAIN + 1; i <= VAL_MAIN * 2; i++) quickPutItem(i);
+
+  if (box1Loc >= 0) quickDrawBox(box1Loc);
+  if (multiBoxLoc.x > 0) quickDrawMultiBox();
+}
+function insertionDraw() {}
+function mergeDraw() {}
 
 // ---------------------------- Stepping through the sorts ------------------------------
 
@@ -578,16 +598,22 @@ function scriptSetup() {
       break;
     }
     case '2': {
+      // tempOn = true;
       j = VAL_MAIN;
       i = 2;
       maxLoc = 1;
-      // tempOn = true;
       break;
     }
     case '3': {
-      j = 0;
+      stackCt = 0;
+      hi = VAL_MAIN;
+      lo = 1;
+      k = 0;
+      i = 1; // i and j are starting valuse for lo and hi
+      j = VAL_MAIN;
       multiBoxLoc.x = 1;
-      multiBoxLoc.y = 1;
+      multiBoxLoc.y = VAL_MAIN;
+      // tempOn = true;
       break;
     }
     case '4': {
@@ -605,15 +631,9 @@ function scriptSetup() {
       break;
     }
     case '5': {
-      stackCt = 0;
-      hi = VAL_MAIN;
-      lo = 1;
-      k = 0;
-      i = 1; // i and j are starting valuse for lo and hi
-      j = VAL_MAIN;
+      j = 0;
       multiBoxLoc.x = 1;
-      multiBoxLoc.y = VAL_MAIN;
-      // tempOn = true;
+      multiBoxLoc.y = 1;
       break;
     }
   }
@@ -692,39 +712,77 @@ function scriptStep() {
         i = i + 1;
       } // end case 2
       break;
-    case '3': // insertions sort
-      if (j == 0) {
-        copyItem(0, 2);
-        j = 2;
-        i = 1;
-        // tempOn = true;
-      } else if (j == VAL_MAIN + 1) {
+    case '3': // quicksort
+      if (k == 0) {
+        if (hi == lo) {
+          item[hi] = resizeCol + item[hi]; // Alerado pois bugava as colunas
+          multiBoxLoc.x = -1;
+          multiBoxLoc.y = -1;
+          k = 1;
+        } else {
+          copyItem(0, lo);
+          k = -1;
+        }
+      } else if (k == 1) {
+        if (stackCt == 0) {
+          // tempOn = false;
+          done = true;
+        } else {
+          hi = stack[stackCt];
+          lo = stack[stackCt - 1];
+          j = hi;
+          i = lo;
+          stackCt = stackCt - 2;
+          multiBoxLoc.x = lo;
+          multiBoxLoc.y = hi;
+          k = 0;
+        }
+      } else if (k == 2) {
         multiBoxLoc.x = -1;
-        multiBoxLoc.y - 1;
-        for (var x = 1; x <= VAL_MAIN; x++) item[x] += resizeCol;
-        done = true;
-        // tempOn = false;
-      } else if (i == 0) {
-        copyItem(1, 0);
-        i = -1;
-      } else if (i == -1) {
+        multiBoxLoc.y = -1;
+        item[hi] = resizeCol + item[hi];
+        if (hi < j) {
+          stack[stackCt + 1] = hi + 1;
+          stack[stackCt + 2] = j;
+          stackCt = stackCt + 2;
+        }
+        if (hi > i) {
+          stack[stackCt + 1] = i;
+          stack[stackCt + 2] = hi - 1;
+          stackCt = stackCt + 2;
+        }
+        k = 1;
+      } else if (hi == lo) {
         putBoxes(-1, -1);
-        multiBoxLoc.x = 1;
-        multiBoxLoc.y = j;
-        j = j + 1;
-        i = -2;
-      } else if (i == -2) {
-        copyItem(0, j);
-        i = j - 1;
-      } else if (greaterThan(i, 0)) {
-        compCt++;
-        $('#insertionCompCt').html('' + compCt);
-        copyItem(i + 1, i);
-        i = i - 1;
-      } else {
-        copyItem(i + 1, 0);
-        i = -1;
-      } // end case 3
+        copyItem(hi, 0);
+        k = 2;
+      } else if (item[lo] == -1) {
+        if (greaterThan(0, hi)) {
+          compCt++;
+          $('#quickCompCt').html('' + compCt);
+          copyItem(lo, hi);
+          lo = lo + 1;
+          multiBoxLoc.x = lo;
+          multiBoxLoc.y = hi;
+        } else {
+          hi = hi - 1;
+          multiBoxLoc.x = lo;
+          multiBoxLoc.y = hi;
+        }
+      } else if (item[hi] == -1) {
+        if (greaterThan(lo, 0)) {
+          compCt++;
+          $('#quickCompCt').html('' + compCt);
+          copyItem(hi, lo);
+          hi = hi - 1;
+          multiBoxLoc.x = lo;
+          multiBoxLoc.y = hi;
+        } else {
+          lo = lo + 1;
+          multiBoxLoc.x = lo;
+          multiBoxLoc.y = hi;
+        }
+      }
       break;
     case '4': // merge sort
       if (lo == 1 && sortLength == VAL_MAIN / 2) {
@@ -797,77 +855,40 @@ function scriptStep() {
         k = k + 1;
       } // end case 4
       break;
-    case '5': // quicksort
-      if (k == 0) {
-        if (hi == lo) {
-          item[hi] = resizeCol + item[hi]; // Alerado pois bugava as colunas
-          multiBoxLoc.x = -1;
-          multiBoxLoc.y = -1;
-          k = 1;
-        } else {
-          copyItem(0, lo);
-          k = -1;
-        }
-      } else if (k == 1) {
-        if (stackCt == 0) {
-          // tempOn = false;
-          done = true;
-        } else {
-          hi = stack[stackCt];
-          lo = stack[stackCt - 1];
-          j = hi;
-          i = lo;
-          stackCt = stackCt - 2;
-          multiBoxLoc.x = lo;
-          multiBoxLoc.y = hi;
-          k = 0;
-        }
-      } else if (k == 2) {
+    case '5': // insertions sort
+      if (j == 0) {
+        copyItem(0, 2);
+        j = 2;
+        i = 1;
+        // tempOn = true;
+      } else if (j == VAL_MAIN + 1) {
         multiBoxLoc.x = -1;
-        multiBoxLoc.y = -1;
-        item[hi] = resizeCol + item[hi];
-        if (hi < j) {
-          stack[stackCt + 1] = hi + 1;
-          stack[stackCt + 2] = j;
-          stackCt = stackCt + 2;
-        }
-        if (hi > i) {
-          stack[stackCt + 1] = i;
-          stack[stackCt + 2] = hi - 1;
-          stackCt = stackCt + 2;
-        }
-        k = 1;
-      } else if (hi == lo) {
+        multiBoxLoc.y - 1;
+        for (var x = 1; x <= VAL_MAIN; x++) item[x] += resizeCol;
+        done = true;
+        // tempOn = false;
+      } else if (i == 0) {
+        copyItem(1, 0);
+        i = -1;
+      } else if (i == -1) {
         putBoxes(-1, -1);
-        copyItem(hi, 0);
-        k = 2;
-      } else if (item[lo] == -1) {
-        if (greaterThan(0, hi)) {
-          compCt++;
-          $('#quickCompCt').html('' + compCt);
-          copyItem(lo, hi);
-          lo = lo + 1;
-          multiBoxLoc.x = lo;
-          multiBoxLoc.y = hi;
-        } else {
-          hi = hi - 1;
-          multiBoxLoc.x = lo;
-          multiBoxLoc.y = hi;
-        }
-      } else if (item[hi] == -1) {
-        if (greaterThan(lo, 0)) {
-          compCt++;
-          $('#quickCompCt').html('' + compCt);
-          copyItem(hi, lo);
-          hi = hi - 1;
-          multiBoxLoc.x = lo;
-          multiBoxLoc.y = hi;
-        } else {
-          lo = lo + 1;
-          multiBoxLoc.x = lo;
-          multiBoxLoc.y = hi;
-        }
-      } // end case 5
+        multiBoxLoc.x = 1;
+        multiBoxLoc.y = j;
+        j = j + 1;
+        i = -2;
+      } else if (i == -2) {
+        copyItem(0, j);
+        i = j - 1;
+      } else if (greaterThan(i, 0)) {
+        compCt++;
+        $('#insertionCompCt').html('' + compCt);
+        copyItem(i + 1, i);
+        i = i - 1;
+      } else {
+        copyItem(i + 1, 0);
+        i = -1;
+      } // end case 3
+      break;
   } // end switch
 } // end scriptStep()
 
@@ -949,6 +970,7 @@ function frame() {
       break;
 
     case '3':
+      quickDraw();
       break;
 
     case '4':
@@ -960,7 +982,7 @@ function frame() {
     default:
       console.log('Caiu no default: ' + tempSort);
       // tempSort = '0';
-      draw();
+      defaultDraw();
       break;
   }
 }
@@ -1025,7 +1047,6 @@ function bubbleCanva() {
     if ($('#fastCheckbox').attr('checked'));
   });
 }
-
 function selectionCanva() {
   var selectionCanvas = document.getElementById('selectionCanvas');
   selection = selectionCanvas.getContext('2d');
@@ -1043,12 +1064,25 @@ function selectionCanva() {
   });
   $('#newBtn').click(doNew);
 }
+function quickCanva() {
+  var quickCanvas = document.getElementById('quickCanvas');
+  quick = quickCanvas.getContext('2d');
+  width = quickCanvas.width;
+  height = quickCanvas.height;
 
+  $('#runBtn3').click(() => {
+    doRun('3');
+  });
+  $('#stepBtn3').click(() => {
+    doStep('3');
+  });
+  $('#pauseBtn3').click(() => {
+    doPause('3');
+  });
+  $('#newBtn').click(doNew);
+}
 function insertionCanva() {}
-
 function mergeCanva() {}
-
-function quickCanva() {}
 
 function size1(w, h) {
   width = w;
@@ -1143,9 +1177,9 @@ function setValMain(x) {
 $(document).ready(function () {
   bubbleCanva();
   selectionCanva();
+  quickCanva();
   setValMain($('select option:selected').val());
   $('#newBtn').click(() => {
-    console.log('caiu aqui');
     setValMain($('select option:selected').val());
   });
 });
