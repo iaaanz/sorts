@@ -6,9 +6,9 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
   <script src="https://code.jquery.com/jquery-1.6.1.js" integrity="sha256-Du92qVg6bHoet2TTP+N2v+GGHfefq4LCw/XRYYPoIBY=" crossorigin="anonymous"></script>
   <script src="sorts.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
 </head>
 
 <body class="bg-dark">
@@ -16,17 +16,16 @@
     <form class="form-inline justify-content-center mt-2">
       <div class="form-group mx-2">
         <select class="custom-select">
-          <option selected disabled>Itens</option>
-          <option value="16">16</option>
-          <option value="32">32</option>
+          <option selected value="32">32</option>
           <option value="64">64</option>
           <option value="128">128</option>
           <option value="256">256</option>
-          <option value="524">524</option>
+          <option value="512">512</option>
+          <option value="1024">1024</option>
         </select>
       </div>
       <button type="button" id="newBtn" class="btn btn-primary mx-2">Gerar</button>
-      <input type=checkbox id="fastCheckbox"><label class="text-white" for="fastCheckbox">Fast</label>
+      <input type="checkbox" id="fastCheckbox" checked><label class="text-white" for="fastCheckbox">Fast</label>
     </form>
   </div>
   <div class="container-fluid mt-5">
@@ -35,15 +34,15 @@
         <div class="row">
           <div class="col text-white">
             <b> Bubble Sort - </b>
-            <label>Comparações:</label> <span id="compCt">0</span>
+            <label>Comparações:</label> <span id="bubbleCompCt">0</span>
             <b>/</b>
-            <label>Cópias: </label> <span id="moveCt">0</span>
-            <canvas id="bubbleCanvas" width=700 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
+            <label>Cópias: </label> <span id="bubbleMoveCt">0</span>
+            <canvas id="bubbleCanvas" width=780 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
           </div>
           <div class="col mt-4">
-            <button type="button" id="runBtn1" class="btn btn-success my-2">Iniciar</button>
-            <p><button id="pauseBtn">Pause</button></p>
-            <p><button id="stepBtn">Step</button></p>
+            <p><button id="runBtn1" class="btn btn-success mt-2">Iniciar</button></p>
+            <p><button id="pauseBtn1" class="btn btn-warning">Pause</button></p>
+            <p><button id="stepBtn1" class="btn btn-primary">Step</button></p>
           </div>
         </div>
       </div>
@@ -51,15 +50,15 @@
         <div class="row">
           <div class="col text-white">
             <b> Selection Sort - </b>
-            <label>Comparações:</label> <span id="compCt">0</span>
+            <label>Comparações:</label> <span id="selectionCompCt">0</span>
             <b>/</b>
-            <label>Cópias: </label> <span id="moveCt">0</span>
-            <canvas id="selectionCanvas" width=700 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
+            <label>Cópias: </label> <span id="selectionMoveCt">0</span>
+            <canvas id="selectionCanvas" width=780 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
           </div>
           <div class="col mt-4">
-            <button type="button" id="runBtn2" class="btn btn-success my-2">Iniciar</button>
-            <p><button id="pauseBtn">Pause</button></p>
-            <p><button id="stepBtn">Step</button></p>
+            <p><button id="runBtn2" class="btn btn-success mt-2">Iniciar</button></p>
+            <p><button id="pauseBtn2" class="btn btn-warning">Pause</button></p>
+            <p><button id="stepBtn2" class="btn btn-primary">Step</button></p>
           </div>
         </div>
       </div>
