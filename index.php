@@ -81,28 +81,17 @@
       </div>
       <div class="col">
         <div class="row">
-          <div class="col">
-            <canvas id="sortcanvas1" width=700 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
+          <div class="col text-white">
+            <b> Insertion Sort - </b>
+            <label>Comparações:</label> <span id="insertionCompCt">0</span>
+            <b>/</b>
+            <label>Cópias: </label> <span id="insertionMoveCt">0</span>
+            <canvas id="insertionCanvas" width=780 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
           </div>
-          <div class="col">
-            <p><select id="sortSelect">
-                <option value="1">Bubble Sort</option>
-                <option value="2">Selection Sort</option>
-                <option value="3">Insertion Sort</option>
-                <option value="4">Merge Sort</option>
-                <option value="5">Quick Sort</option>
-              </select></p>
-            <!-- <p><button id="newBtn">New Sort</button></p>
-            <p><input type=checkbox id="fastCheckbox"><label for="fastCheckbox">Fast</label></p>
-            <p><button id="runBtn">Run</button></p>
-            <p><button id="pauseBtn">Pause</button></p>
-            <p><button id="stepBtn">Step</button></p> -->
-            <p style="margin-top:30px;">
-              <b>Comparações:</b> <span id="compCt">0</span>
-            </p>
-            <p style="margin-top:30px;">
-              <b>Cópias: </b> <span id="moveCt">0</span>
-            </p>
+          <div class="col mt-4">
+            <p><button id="runBtn4" class="btn btn-success mt-2">Iniciar</button></p>
+            <p><button id="pauseBtn4" class="btn btn-warning">Pause</button></p>
+            <p><button id="stepBtn4" class="btn btn-primary">Step</button></p>
           </div>
         </div>
       </div>

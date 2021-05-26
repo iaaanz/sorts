@@ -71,14 +71,47 @@ function setState(newState) {
     'disabled',
     state == RUN || state == IDLE || state == STEPPING
   );
-  $('#pauseBtn').attr('disabled', state != RUN);
-  $('#stepBtn').attr(
+  $('#runBtn2').attr(
     'disabled',
     state == RUN || state == IDLE || state == STEPPING
   );
-  $('#sortSelect').attr(
+  $('#runBtn3').attr(
     'disabled',
-    state == RUN || state == PAUSED || state == STEPPING
+    state == RUN || state == IDLE || state == STEPPING
+  );
+  $('#runBtn4').attr(
+    'disabled',
+    state == RUN || state == IDLE || state == STEPPING
+  );
+  $('#runBtn5').attr(
+    'disabled',
+    state == RUN || state == IDLE || state == STEPPING
+  );
+  $('#pauseBtn1').attr('disabled', state != RUN);
+  $('#pauseBtn2').attr('disabled', state != RUN);
+  $('#pauseBtn3').attr('disabled', state != RUN);
+  $('#pauseBtn4').attr('disabled', state != RUN);
+  $('#pauseBtn5').attr('disabled', state != RUN);
+
+  $('#stepBtn1').attr(
+    'disabled',
+    state == RUN || state == IDLE || state == STEPPING
+  );
+  $('#stepBtn2').attr(
+    'disabled',
+    state == RUN || state == IDLE || state == STEPPING
+  );
+  $('#stepBtn3').attr(
+    'disabled',
+    state == RUN || state == IDLE || state == STEPPING
+  );
+  $('#stepBtn4').attr(
+    'disabled',
+    state == RUN || state == IDLE || state == STEPPING
+  );
+  $('#stepBtn5').attr(
+    'disabled',
+    state == RUN || state == IDLE || state == STEPPING
   );
 }
 
@@ -116,6 +149,10 @@ function newSort() {
   $('#selectionMoveCt').html('0');
   $('#quickCompCt').html('0');
   $('#quickMoveCt').html('0');
+  $('#insertionCompCt').html('0');
+  $('#insertionMoveCt').html('0');
+  $('#mergeCompCt').html('0');
+  $('#mergeMoveCt').html('0');
   compCt = 0;
   moveCt = 0;
   valid = false;
