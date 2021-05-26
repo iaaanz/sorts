@@ -19,6 +19,7 @@ var STEPPING = 3;
 var PAUSED = 4;
 
 var selectedSort = '';
+var tempSort = '0';
 var state = IDLE;
 
 var g; // graphic context for drawing on the canvas.
@@ -65,10 +66,8 @@ function stopRunning() {
   }
 }
 
-function setState(newState, newSort) {
-  // called whenever the state changes; sets enabled/disabled status of various elements.
+function setState(newState) {
   state = newState;
-  selectedSort = newSort;
   $('#runBtn1').attr(
     'disabled',
     state == RUN || state == IDLE || state == STEPPING
@@ -85,7 +84,6 @@ function setState(newState, newSort) {
 }
 
 function newSort() {
-  // Set up to get ready for a new sort by storing items in random array positions, etc.
   stopRunning();
   setState(STARTING);
 
@@ -94,6 +92,7 @@ function newSort() {
    * colunas muito grande no início
    */
   resizeCol = (100 * valMain) / 16;
+  tempSort = '0';
   valid = false;
   maxLoc = -1;
   hiLoc = -1;
@@ -118,8 +117,7 @@ function newSort() {
   compCt = 0;
   copyCt = 0;
   valid = false;
-  draw();
-  // bubbleDraw();
+  bubbleDraw();
   selectionDraw();
 }
 
@@ -569,7 +567,7 @@ function putBoxes(itemA, itemB) {
 
 function scriptSetup() {
   // The first step in a sort
-  method = selectedSort;
+  method = tempSort;
   switch (method) {
     case '1': {
       j = valMain;
@@ -921,30 +919,57 @@ function frame() {
   }
   if (done && actionQueue.length == 0) setState(IDLE);
   else if (state == STEPPING && actionQueue.length == 0) setState(PAUSED);
-  if (selectedSort == '1') bubbleDraw();
-  if (selectedSort == '2') selectionDraw();
-  if (selectedSort == '3') bubbleDraw();
-  if (selectedSort == '4') bubbleDraw();
-  if (selectedSort == '5') bubbleDraw();
+
+  switch (tempSort) {
+    case '1':
+      console.log(tempSort);
+      bubbleDraw();
+      break;
+
+    case '2':
+      console.log(tempSort);
+      selectionDraw();
+      break;
+
+    case '3':
+      break;
+
+    case '4':
+      break;
+
+    case '5':
+      break;
+
+    default:
+      console.log('Caiu no default: ' + tempSort);
+      // tempSort = '0';
+      draw();
+      break;
+  }
 }
 
 // ---------------------------- Control and Initialization -------------------------------
 
 function doRun(sort) {
+  if (tempSort == '0') {
+    tempSort = sort;
+  } else {
+    tempSort = '0';
+  }
   if (state == RUN || state == IDLE || state == STEPPING) return;
-  setState(RUN, sort);
+  setState(RUN);
   frame();
 }
 function doStep(sort) {
   if (state == RUN || state == IDLE || state == STEPPING) return;
   setState(STEPPING, sort);
-  frame();
+  // frame();
 }
 function doPause(sort) {
   if (state != RUN) return;
   stopRunning();
   setState(PAUSED, sort);
-  bubbleDraw();
+  // bubbleDraw();
 }
 function doNew() {
   // handler for "New" button

@@ -26,6 +26,7 @@
         </select>
       </div>
       <button type="button" id="newBtn" class="btn btn-primary mx-2">Gerar</button>
+      <input type=checkbox id="fastCheckbox"><label class="text-white" for="fastCheckbox">Fast</label>
     </form>
   </div>
   <div class="container-fluid mt-5">
@@ -39,15 +40,7 @@
             <label>Cópias: </label> <span id="moveCt">0</span>
             <canvas id="bubbleCanvas" width=700 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
           </div>
-          <div class="col">
-            <p><select id="sortSelect">
-                <option value="1">Bubble Sort</option>
-                <option value="2">Selection Sort</option>
-                <option value="3">Insertion Sort</option>
-                <option value="4">Merge Sort</option>
-                <option value="5">Quick Sort</option>
-              </select></p>
-            <p><input type=checkbox id="fastCheckbox"><label for="fastCheckbox">Fast</label></p>
+          <div class="col mt-4">
             <button type="button" id="runBtn1" class="btn btn-success my-2">Iniciar</button>
             <p><button id="pauseBtn">Pause</button></p>
             <p><button id="stepBtn">Step</button></p>
@@ -63,15 +56,7 @@
             <label>Cópias: </label> <span id="moveCt">0</span>
             <canvas id="selectionCanvas" width=700 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
           </div>
-          <div class="col">
-            <p><select id="sortSelect">
-                <option value="1">Bubble Sort</option>
-                <option value="2">Selection Sort</option>
-                <option value="3">Insertion Sort</option>
-                <option value="4">Merge Sort</option>
-                <option value="5">Quick Sort</option>
-              </select></p>
-            <p><input type=checkbox id="fastCheckbox"><label for="fastCheckbox">Fast</label></p>
+          <div class="col mt-4">
             <button type="button" id="runBtn2" class="btn btn-success my-2">Iniciar</button>
             <p><button id="pauseBtn">Pause</button></p>
             <p><button id="stepBtn">Step</button></p>
@@ -94,7 +79,6 @@
                 <option value="5">Quick Sort</option>
               </select></p>
             <p><button id="newBtn">New Sort</button></p>
-            <p><input type=checkbox id="fastCheckbox"><label for="fastCheckbox">Fast</label></p>
             <p><button id="runBtn">Run</button></p>
             <p><button id="pauseBtn">Pause</button></p>
             <p><button id="stepBtn">Step</button></p>
