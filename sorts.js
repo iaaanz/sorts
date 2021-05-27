@@ -159,6 +159,7 @@ function newSort() {
   bubbleDraw();
   selectionDraw();
   quickDraw();
+  insertionDraw();
 }
 
 //-------------------------------- Drawing ------------------------------------------
@@ -284,6 +285,36 @@ function quickPutItem(i) {
     alert('Internal error while drawing!!??');
   }
 }
+function insertionPutItem(i) {
+  var h = item[i];
+  if (h == -1) return;
+  var x, y, ht;
+  if (h > VAL_MAIN) {
+    ht = (h - resizeCol) * barIncrement + minBarHeight;
+    insertion.fillStyle = '#F00';
+  } else {
+    ht = h * barIncrement + minBarHeight;
+    insertion.fillStyle = barColor;
+  }
+  if (i == 0) {
+    x = leftOffset + ((barWidth + barGap) * 25) / 2;
+    y = secondRow_y - ht;
+  } else if (i < VAL_MAIN + 1) {
+    x = leftOffset + (i - 1) * (barWidth + barGap);
+    y = firstRow_y - ht;
+  } else {
+    x = leftOffset + (i - (VAL_MAIN + 1)) * (barWidth + barGap);
+    y = secondRow_y - ht;
+  }
+  try {
+    insertion.fillRect(x, y, barWidth + 2.5, ht); // Desenha a coluna
+    insertion.strokeStyle = finishedBarColor;
+  } catch (e) {
+    if (timeout != null) timeout.cancel();
+    setState(IDLE);
+    alert('Internal error while drawing!!??');
+  }
+}
 
 // Template
 function drawMovingItem() {
@@ -387,6 +418,22 @@ function quickDrawBox(boxLoc) {
   quick.strokeStyle = boxColor;
   quick.strokeRect(x - 2, y - barHeight - 2, barWidth + 4, barHeight + 4);
 }
+function insertionDrawBox(boxLoc) {
+  // draws a box aroud one of the items (indicated by boxLoc)
+  var x, y;
+  if (boxLoc == 0) {
+    x = leftOffset + ((barWidth + barGap) * 25) / 2;
+    y = secondRow_y;
+  } else if (boxLoc < VAL_MAIN + 1) {
+    x = leftOffset + (boxLoc - 1) * (barWidth + barGap);
+    y = firstRow_y;
+  } else {
+    x = leftOffset + (boxLoc - (VAL_MAIN + 1)) * (barWidth + barGap);
+    y = secondRow_y;
+  }
+  insertion.strokeStyle = boxColor;
+  insertion.strokeRect(x - 2, y - barHeight - 2, barWidth + 4, barHeight + 4);
+}
 
 // Template
 function drawMultiBox() {
@@ -430,6 +477,20 @@ function quickDrawMultiBox() {
   wd = (multiBoxLoc.y - multiBoxLoc.x) * (barGap + barWidth) + barWidth;
   quick.strokeStyle = multiBoxColor;
   quick.strokeRect(x - 4, y - barHeight - 4, wd + 8, barHeight + 8);
+}
+function insertionDrawMultiBox() {
+  // draws a box around items number multiBoxLoc.x through multiBoxLoc.y
+  var x, y, wd;
+  if (multiBoxLoc.x < VAL_MAIN + 1) {
+    y = firstRow_y;
+    x = leftOffset + (multiBoxLoc.x - 1) * (barWidth + barGap);
+  } else {
+    y = secondRow_y;
+    x = leftOffset + (multiBoxLoc.x - (VAL_MAIN + 1)) * (barWidth + barGap);
+  }
+  wd = (multiBoxLoc.y - multiBoxLoc.x) * (barGap + barWidth) + barWidth;
+  insertion.strokeStyle = multiBoxColor;
+  insertion.strokeRect(x - 4, y - barHeight - 4, wd + 8, barHeight + 8);
 }
 
 function drawMergeListBoxes() {
@@ -528,7 +589,18 @@ function quickDraw() {
   if (box1Loc >= 0) quickDrawBox(box1Loc);
   if (multiBoxLoc.x > 0) quickDrawMultiBox();
 }
-function insertionDraw() {}
+function insertionDraw() {
+  insertion.clearRect(0, 0, width, height);
+  insertion.strokeStyle = borderColor;
+  insertion.strokeRect(0, 0, width, height);
+  insertion.strokeRect(1, 1, width - 2, height - 2);
+
+  for (var i = 1; i <= VAL_MAIN; i++) insertionPutItem(i);
+  for (var i = VAL_MAIN + 1; i <= VAL_MAIN * 2; i++) insertionPutItem(i);
+
+  if (box1Loc >= 0) insertionDrawBox(box1Loc);
+  if (multiBoxLoc.x > 0) insertionDrawMultiBox();
+}
 function mergeDraw() {}
 
 // ---------------------------- Stepping through the sorts ------------------------------
@@ -654,6 +726,12 @@ function scriptSetup() {
       break;
     }
     case '4': {
+      j = 0;
+      multiBoxLoc.x = 1;
+      multiBoxLoc.y = 1;
+      break;
+    }
+    case '5': {
       sortLength = 1;
       i = 1;
       end_i = 1;
@@ -665,12 +743,6 @@ function scriptSetup() {
       multiBoxLoc.x = VAL_MAIN + 1;
       multiBoxLoc.y = VAL_MAIN + 2;
       mergeBox = [1, 1, 2];
-      break;
-    }
-    case '5': {
-      j = 0;
-      multiBoxLoc.x = 1;
-      multiBoxLoc.y = 1;
       break;
     }
   }
@@ -821,7 +893,41 @@ function scriptStep() {
         }
       }
       break;
-    case '4': // merge sort
+    case '4': // insertions sort
+      if (j == 0) {
+        copyItem(0, 2);
+        j = 2;
+        i = 1;
+        // tempOn = true;
+      } else if (j == VAL_MAIN + 1) {
+        multiBoxLoc.x = -1;
+        multiBoxLoc.y - 1;
+        for (var x = 1; x <= VAL_MAIN; x++) item[x] += resizeCol;
+        done = true;
+        // tempOn = false;
+      } else if (i == 0) {
+        copyItem(1, 0);
+        i = -1;
+      } else if (i == -1) {
+        putBoxes(-1, -1);
+        multiBoxLoc.x = 1;
+        multiBoxLoc.y = j;
+        j = j + 1;
+        i = -2;
+      } else if (i == -2) {
+        copyItem(0, j);
+        i = j - 1;
+      } else if (greaterThan(i, 0)) {
+        compCt++;
+        $('#insertionCompCt').html('' + compCt);
+        copyItem(i + 1, i);
+        i = i - 1;
+      } else {
+        copyItem(i + 1, 0);
+        i = -1;
+      } // end case 3
+      break;
+    case '5': // merge sort
       if (lo == 1 && sortLength == VAL_MAIN / 2) {
         // sortLength é o VAL_MAIN / 2
         console.log('caiu no 1 IF');
@@ -891,40 +997,6 @@ function scriptStep() {
         i = i + 1;
         k = k + 1;
       } // end case 4
-      break;
-    case '5': // insertions sort
-      if (j == 0) {
-        copyItem(0, 2);
-        j = 2;
-        i = 1;
-        // tempOn = true;
-      } else if (j == VAL_MAIN + 1) {
-        multiBoxLoc.x = -1;
-        multiBoxLoc.y - 1;
-        for (var x = 1; x <= VAL_MAIN; x++) item[x] += resizeCol;
-        done = true;
-        // tempOn = false;
-      } else if (i == 0) {
-        copyItem(1, 0);
-        i = -1;
-      } else if (i == -1) {
-        putBoxes(-1, -1);
-        multiBoxLoc.x = 1;
-        multiBoxLoc.y = j;
-        j = j + 1;
-        i = -2;
-      } else if (i == -2) {
-        copyItem(0, j);
-        i = j - 1;
-      } else if (greaterThan(i, 0)) {
-        compCt++;
-        $('#insertionCompCt').html('' + compCt);
-        copyItem(i + 1, i);
-        i = i - 1;
-      } else {
-        copyItem(i + 1, 0);
-        i = -1;
-      } // end case 3
       break;
   } // end switch
 } // end scriptStep()
@@ -1011,14 +1083,15 @@ function frame() {
       break;
 
     case '4':
+      insertionDraw();
       break;
 
     case '5':
+      mergeDraw();
       break;
 
     default:
       console.log('Caiu no default: ' + tempSort);
-      // tempSort = '0';
       defaultDraw();
       break;
   }
@@ -1080,9 +1153,6 @@ function bubbleCanva() {
     doPause('1');
   });
   $('#newBtn').click(doNew);
-  $('#fastCheckbox').change(function () {
-    if ($('#fastCheckbox').attr('checked'));
-  });
 }
 function selectionCanva() {
   var selectionCanvas = document.getElementById('selectionCanvas');
@@ -1118,7 +1188,23 @@ function quickCanva() {
   });
   $('#newBtn').click(doNew);
 }
-function insertionCanva() {}
+function insertionCanva() {
+  var insertionCanvas = document.getElementById('insertionCanvas');
+  insertion = insertionCanvas.getContext('2d');
+  width = insertionCanvas.width;
+  height = insertionCanvas.height;
+
+  $('#runBtn4').click(() => {
+    doRun('4');
+  });
+  $('#stepBtn4').click(() => {
+    doStep('4');
+  });
+  $('#pauseBtn4').click(() => {
+    doPause('4');
+  });
+  $('#newBtn').click(doNew);
+}
 function mergeCanva() {}
 
 function size1(w, h) {
@@ -1215,6 +1301,7 @@ $(document).ready(function () {
   bubbleCanva();
   selectionCanva();
   quickCanva();
+  insertionCanva();
   setValMain($('select option:selected').val());
   $('#newBtn').click(() => {
     setValMain($('select option:selected').val());
