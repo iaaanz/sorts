@@ -23,6 +23,7 @@ var state = IDLE;
 
 var g; // graphic context for drawing on the canvas.
 var width, height; // width and height of the canvas.
+var mergeWidth, mergeHeight;
 
 var barWidth, barHeight, minBarHeight, barIncrement; // measurements used for drawinbubble.
 var leftOffset, firstRow_y, secondRow_y, textAscent;
@@ -160,6 +161,7 @@ function newSort() {
   selectionDraw();
   quickDraw();
   insertionDraw();
+  mergeDraw();
 }
 
 //-------------------------------- Drawing ------------------------------------------
@@ -315,6 +317,36 @@ function insertionPutItem(i) {
     alert('Internal error while drawing!!??');
   }
 }
+function mergePutItem(i) {
+  var h = item[i];
+  if (h == -1) return;
+  var x, y, ht;
+  if (h > VAL_MAIN) {
+    ht = (h - resizeCol) * mergeBarIncrement + mergeMinBarHeight;
+    merge.fillStyle = '#F00';
+  } else {
+    ht = h * mergeBarIncrement + mergeMinBarHeight;
+    merge.fillStyle = barColor;
+  }
+  if (i == 0) {
+    x = leftOffset + ((barWidth + barGap) * 25) / 2;
+    y = mergeSecondRow_y - ht;
+  } else if (i < VAL_MAIN + 1) {
+    x = leftOffset + (i - 1) * (barWidth + barGap);
+    y = mergeFirstRow_y - ht;
+  } else {
+    x = leftOffset + (i - (VAL_MAIN + 1)) * (barWidth + barGap);
+    y = mergeSecondRow_y - ht;
+  }
+  try {
+    merge.fillRect(x, y, barWidth + 2.5, ht); // Desenha a coluna
+    merge.strokeStyle = finishedBarColor;
+  } catch (e) {
+    if (timeout != null) timeout.cancel();
+    setState(IDLE);
+    alert('Internal error while drawing!!??');
+  }
+}
 
 // Template
 function drawMovingItem() {
@@ -434,6 +466,26 @@ function insertionDrawBox(boxLoc) {
   insertion.strokeStyle = boxColor;
   insertion.strokeRect(x - 2, y - barHeight - 2, barWidth + 4, barHeight + 4);
 }
+function mergeDrawBox(boxLoc) {
+  var x, y;
+  if (boxLoc == 0) {
+    x = leftOffset + ((barWidth + barGap) * 25) / 2;
+    y = mergeSecondRow_y;
+  } else if (boxLoc < VAL_MAIN + 1) {
+    x = leftOffset + (boxLoc - 1) * (barWidth + barGap);
+    y = mergeFirstRow_y;
+  } else {
+    x = leftOffset + (boxLoc - (VAL_MAIN + 1)) * (barWidth + barGap);
+    y = mergeSecondRow_y;
+  }
+  merge.strokeStyle = boxColor;
+  merge.strokeRect(
+    x - 2,
+    y - mergeBarHeight - 2,
+    barWidth + 4,
+    mergeBarHeight + 4
+  );
+}
 
 // Template
 function drawMultiBox() {
@@ -492,17 +544,31 @@ function insertionDrawMultiBox() {
   insertion.strokeStyle = multiBoxColor;
   insertion.strokeRect(x - 4, y - barHeight - 4, wd + 8, barHeight + 8);
 }
+function mergeDrawMultiBox() {
+  // draws a box around items number multiBoxLoc.x through multiBoxLoc.y
+  var x, y, wd;
+  if (multiBoxLoc.x < VAL_MAIN + 1) {
+    y = mergeFirstRow_y;
+    x = leftOffset + (multiBoxLoc.x - 1) * (barWidth + barGap);
+  } else {
+    y = mergeSecondRow_y;
+    x = leftOffset + (multiBoxLoc.x - (VAL_MAIN + 1)) * (barWidth + barGap);
+  }
+  wd = (multiBoxLoc.y - multiBoxLoc.x) * (barGap + barWidth) + barWidth;
+  merge.strokeStyle = multiBoxColor;
+  merge.strokeRect(x - 4, y - mergeBarHeight - 4, wd + 8, mergeBarHeight + 8);
+}
 
+// Específico para o merge
 function drawMergeListBoxes() {
-  // Draws a pair of boxes around lists that are being merged in MergeSort
   var x, y, wd1, wd2;
-  y = firstRow_y;
+  y = mergeFirstRow_y;
   x = leftOffset + (mergeBox[0] - 1) * (barWidth + barGap);
   wd1 = (mergeBox[1] - mergeBox[0]) * (barGap + barWidth) + barWidth;
   wd2 = (mergeBox[2] - mergeBox[0]) * (barGap + barWidth) + barWidth;
-  bubble.strokeStyle = multiBoxColor;
-  bubble.strokeRect(x - 4, y - barHeight - 4, wd1 + 8, barHeight + 8);
-  bubble.strokeRect(x - 4, y - barHeight - 4, wd2 + 8, barHeight + 8);
+  merge.strokeStyle = multiBoxColor;
+  merge.strokeRect(x - 4, y - mergeBarHeight - 4, wd1 + 8, mergeBarHeight + 8);
+  merge.strokeRect(x - 4, y - mergeBarHeight - 4, wd2 + 8, mergeBarHeight + 8);
 }
 
 // Template
@@ -546,7 +612,7 @@ function defaultDraw() {
   if (box1Loc >= 0) drawBox(box1Loc);
 
   // Desenha a box rosa nas colunas da segunda linha
-  // if (box2Loc >= 0) drawBox(box2Loc);
+  if (box2Loc >= 0) drawBox(box2Loc);
 
   if (multiBoxLoc.x > 0) drawMultiBox();
   if (mergeBox[0] > 0) drawMergeListBoxes();
@@ -601,7 +667,20 @@ function insertionDraw() {
   if (box1Loc >= 0) insertionDrawBox(box1Loc);
   if (multiBoxLoc.x > 0) insertionDrawMultiBox();
 }
-function mergeDraw() {}
+function mergeDraw() {
+  merge.clearRect(0, 0, mergeWidth, mergeHeight);
+  merge.strokeStyle = borderColor;
+  merge.strokeRect(0, 0, mergeWidth, mergeHeight);
+  merge.strokeRect(1, 1, mergeWidth - 2, mergeHeight - 2);
+
+  for (var i = 1; i <= VAL_MAIN; i++) mergePutItem(i);
+  for (var i = VAL_MAIN + 1; i <= VAL_MAIN * 2; i++) mergePutItem(i);
+
+  if (box1Loc >= 0) mergeDrawBox(box1Loc);
+  if (box2Loc >= 0) mergeDrawBox(box2Loc);
+  if (multiBoxLoc.x > 0) mergeDrawMultiBox();
+  if (mergeBox[0] > 0) drawMergeListBoxes();
+}
 
 // ---------------------------- Stepping through the sorts ------------------------------
 
@@ -1058,10 +1137,10 @@ function frame() {
       scriptSetup();
       valid = true;
       done = false;
-      if (state == RUN) timeout = setTimeout(frame, fast ? 0 : 1000);
+      if (state == RUN) timeout = setTimeout(frame, fast ? 0 : 800);
     } else {
       scriptStep();
-      if (!done && state == RUN) timeout = setTimeout(frame, fast ? 0 : 1000);
+      if (!done && state == RUN) timeout = setTimeout(frame, fast ? 0 : 800);
     }
     if (done) setState(IDLE);
     else if (state == STEPPING) setState(PAUSED);
@@ -1130,9 +1209,9 @@ function doPause(sort) {
   setState(PAUSED);
   if (sort == '1') bubbleDraw();
   if (sort == '2') selectionDraw();
-  if (sort == '3') bubbleDraw();
-  if (sort == '4') bubbleDraw();
-  if (sort == '5') bubbleDraw();
+  if (sort == '3') quickDraw();
+  if (sort == '4') insertionDraw();
+  if (sort == '5') mergeDraw();
 }
 function doNew() {
   // handler for "New" button
@@ -1152,13 +1231,10 @@ function bubbleCanva() {
   $('#pauseBtn1').click(() => {
     doPause('1');
   });
-  $('#newBtn').click(doNew);
 }
 function selectionCanva() {
   var selectionCanvas = document.getElementById('selectionCanvas');
   selection = selectionCanvas.getContext('2d');
-  width = selectionCanvas.width;
-  height = selectionCanvas.height;
 
   $('#runBtn2').click(() => {
     doRun('2');
@@ -1169,13 +1245,10 @@ function selectionCanva() {
   $('#pauseBtn2').click(() => {
     doPause('2');
   });
-  $('#newBtn').click(doNew);
 }
 function quickCanva() {
   var quickCanvas = document.getElementById('quickCanvas');
   quick = quickCanvas.getContext('2d');
-  width = quickCanvas.width;
-  height = quickCanvas.height;
 
   $('#runBtn3').click(() => {
     doRun('3');
@@ -1186,7 +1259,6 @@ function quickCanva() {
   $('#pauseBtn3').click(() => {
     doPause('3');
   });
-  $('#newBtn').click(doNew);
 }
 function insertionCanva() {
   var insertionCanvas = document.getElementById('insertionCanvas');
@@ -1203,9 +1275,23 @@ function insertionCanva() {
   $('#pauseBtn4').click(() => {
     doPause('4');
   });
-  $('#newBtn').click(doNew);
 }
-function mergeCanva() {}
+function mergeCanva() {
+  var mergeCanvas = document.getElementById('mergeCanvas');
+  merge = mergeCanvas.getContext('2d');
+  mergeWidth = mergeCanvas.width;
+  mergeHeight = mergeCanvas.height;
+
+  $('#runBtn5').click(() => {
+    doRun('5');
+  });
+  $('#stepBtn5').click(() => {
+    doStep('5');
+  });
+  $('#pauseBtn5').click(() => {
+    doPause('5');
+  });
+}
 
 function size1(w, h) {
   width = w;
@@ -1214,10 +1300,21 @@ function size1(w, h) {
   barWidth = x - 3;
   leftOffset = (width - VAL_MAIN * barWidth - 30 * barGap) / 2;
   barHeight = height - 20;
+  mergebarHeight = barHeight / 2;
   barIncrement = (barHeight - 3) / (VAL_MAIN + 1);
   minBarHeight = barHeight - (VAL_MAIN + 1) * barIncrement;
   firstRow_y = barHeight + 10;
   secondRow_y = 2 * barHeight + 25;
+}
+
+function sizeMerge(w, h) {
+  mergeWidth = w;
+  mergeHeight = h;
+  mergeBarHeight = (mergeHeight - 20) / 2.1;
+  mergeBarIncrement = (mergeBarHeight - 3) / (VAL_MAIN + 1);
+  mergeMinBarHeight = mergeBarHeight - (VAL_MAIN + 1) * mergeBarIncrement;
+  mergeFirstRow_y = mergeBarHeight + 10;
+  mergeSecondRow_y = 2 * mergeBarHeight + 25;
 }
 
 function size2(w, h) {
@@ -1287,12 +1384,30 @@ function size6(w, h) {
 
 function setValMain(x) {
   VAL_MAIN = parseInt(x);
-  if (VAL_MAIN === 32) size1(width, height);
-  if (VAL_MAIN === 64) size2(width, height);
-  if (VAL_MAIN === 128) size3(width, height);
-  if (VAL_MAIN === 256) size4(width, height);
-  if (VAL_MAIN === 512) size5(width, height);
-  if (VAL_MAIN === 1024) size6(width, height);
+  if (VAL_MAIN === 32) {
+    size1(width, height);
+    sizeMerge(mergeWidth, mergeHeight);
+  }
+  if (VAL_MAIN === 64) {
+    size2(width, height);
+    sizeMerge(mergeWidth, mergeHeight);
+  }
+  if (VAL_MAIN === 128) {
+    size3(width, height);
+    sizeMerge(mergeWidth, mergeHeight);
+  }
+  if (VAL_MAIN === 256) {
+    size4(width, height);
+    sizeMerge(mergeWidth, mergeHeight);
+  }
+  if (VAL_MAIN === 512) {
+    size5(width, height);
+    sizeMerge(mergeWidth, mergeHeight);
+  }
+  if (VAL_MAIN === 1024) {
+    size6(width, height);
+    sizeMerge(mergeWidth, mergeHeight);
+  }
   newSort();
   return VAL_MAIN;
 }
@@ -1302,6 +1417,7 @@ $(document).ready(function () {
   selectionCanva();
   quickCanva();
   insertionCanva();
+  mergeCanva();
   setValMain($('select option:selected').val());
   $('#newBtn').click(() => {
     setValMain($('select option:selected').val());

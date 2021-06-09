@@ -69,3 +69,12 @@
   minBarHeight = barHeight - (valMain + 1) * barIncrement;
   firstRow_y = barHeight + 10;
   secondRow_y = 2 * barHeight + 25;
+
+
+
+
+  mergeBarHeight = (mergeHeight - 20) / 2;
+  mergeBarIncrement = (mergeBarHeight - 3) / (VAL_MAIN + 1);
+  mergeMinBarHeight = mergeBarHeight - (VAL_MAIN + 1) * mergeBarIncrement;
+  mergeFirstRow_y = mergeBarHeight + 10;
+  mergeSecondRow_y = 2 * mergeBarHeight + 25;

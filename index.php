@@ -62,7 +62,7 @@
         </div>
       </div>
     </div>
-    <div class="row mt-4">
+    <div class="row mt-2">
       <div class="col">
         <div class="row">
           <div class="col text-white">
@@ -93,6 +93,29 @@
             <p><button id="pauseBtn4" class="btn btn-warning">Pause</button></p>
             <p><button id="stepBtn4" class="btn btn-primary">Step</button></p>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-2">
+      <div class="col">
+        <div class="row">
+          <div class="col text-white">
+            <b> Merge Sort - </b>
+            <label>Comparações:</label> <span id="mergeCompCt">0</span>
+            <b>/</b>
+            <label>Cópias: </label> <span id="mergeMoveCt">0</span>
+            <canvas id="mergeCanvas" width=780 height=350 style="background-color:rgb(230,230,255);border-radius: 10px;"></canvas>
+          </div>
+          <div class="col mt-3">
+            <p><button id="runBtn5" class="btn btn-success mt-2">Iniciar</button></p>
+            <p><button id="pauseBtn5" class="btn btn-warning">Pause</button></p>
+            <p><button id="stepBtn5" class="btn btn-primary">Step</button></p>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="row">
+
         </div>
       </div>
     </div>
