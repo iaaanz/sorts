@@ -66,8 +66,17 @@ function stopRunning() {
   }
 }
 
+function disablePause() {
+  $('#pauseBtn1').attr('disabled', 'disabled');
+  $('#pauseBtn2').attr('disabled', 'disabled');
+  $('#pauseBtn3').attr('disabled', 'disabled');
+  $('#pauseBtn4').attr('disabled', 'disabled');
+  $('#pauseBtn5').attr('disabled', 'disabled');
+}
+
 function setState(newState) {
   state = newState;
+
   $('#runBtn1').attr(
     'disabled',
     state == RUN || state == IDLE || state == STEPPING
@@ -88,11 +97,38 @@ function setState(newState) {
     'disabled',
     state == RUN || state == IDLE || state == STEPPING
   );
-  $('#pauseBtn1').attr('disabled', state != RUN);
-  $('#pauseBtn2').attr('disabled', state != RUN);
-  $('#pauseBtn3').attr('disabled', state != RUN);
-  $('#pauseBtn4').attr('disabled', state != RUN);
-  $('#pauseBtn5').attr('disabled', state != RUN);
+
+  switch (true) {
+    case state == RUN && tempSort == 1:
+      console.log('caiu no case 1');
+      disablePause();
+      $('#pauseBtn1').removeAttr('disabled');
+      break;
+    case state == RUN && tempSort == 2:
+      console.log('caiu no case 2');
+      disablePause();
+      $('#pauseBtn2').removeAttr('disabled');
+      break;
+    case state == RUN && tempSort == 3:
+      console.log('caiu no case 3');
+      disablePause();
+      $('#pauseBtn3').removeAttr('disabled');
+      break;
+    case state == RUN && tempSort == 4:
+      console.log('caiu no case 4');
+      disablePause();
+      $('#pauseBtn4').removeAttr('disabled');
+      break;
+    case state == RUN && tempSort == 5:
+      console.log('caiu no case 5');
+      disablePause();
+      $('#pauseBtn5').removeAttr('disabled');
+      break;
+    default:
+      console.log('default do state');
+      disablePause();
+      break;
+  }
 
   $('#stepBtn1').attr(
     'disabled',
@@ -1293,6 +1329,16 @@ function mergeCanva() {
   });
 }
 
+function sizeMerge(w, h) {
+  mergeWidth = w;
+  mergeHeight = h;
+  mergeBarHeight = (mergeHeight - 20) / 2.1;
+  mergeBarIncrement = (mergeBarHeight - 3) / (VAL_MAIN + 1);
+  mergeMinBarHeight = mergeBarHeight - (VAL_MAIN + 1) * mergeBarIncrement;
+  mergeFirstRow_y = mergeBarHeight + 10;
+  mergeSecondRow_y = 2 * mergeBarHeight + 25;
+}
+
 function size1(w, h) {
   width = w;
   height = h;
@@ -1305,16 +1351,6 @@ function size1(w, h) {
   minBarHeight = barHeight - (VAL_MAIN + 1) * barIncrement;
   firstRow_y = barHeight + 10;
   secondRow_y = 2 * barHeight + 25;
-}
-
-function sizeMerge(w, h) {
-  mergeWidth = w;
-  mergeHeight = h;
-  mergeBarHeight = (mergeHeight - 20) / 2.1;
-  mergeBarIncrement = (mergeBarHeight - 3) / (VAL_MAIN + 1);
-  mergeMinBarHeight = mergeBarHeight - (VAL_MAIN + 1) * mergeBarIncrement;
-  mergeFirstRow_y = mergeBarHeight + 10;
-  mergeSecondRow_y = 2 * mergeBarHeight + 25;
 }
 
 function size2(w, h) {
