@@ -77,26 +77,11 @@ function disablePause() {
 function setState(newState) {
   state = newState;
 
-  $('#runBtn1').attr(
-    'disabled',
-    state == RUN || state == IDLE || state == STEPPING
-  );
-  $('#runBtn2').attr(
-    'disabled',
-    state == RUN || state == IDLE || state == STEPPING
-  );
-  $('#runBtn3').attr(
-    'disabled',
-    state == RUN || state == IDLE || state == STEPPING
-  );
-  $('#runBtn4').attr(
-    'disabled',
-    state == RUN || state == IDLE || state == STEPPING
-  );
-  $('#runBtn5').attr(
-    'disabled',
-    state == RUN || state == IDLE || state == STEPPING
-  );
+  $('#runBtn1').attr('disabled', state == RUN || state == IDLE || state == STEPPING);
+  $('#runBtn2').attr('disabled', state == RUN || state == IDLE || state == STEPPING);
+  $('#runBtn3').attr('disabled', state == RUN || state == IDLE || state == STEPPING);
+  $('#runBtn4').attr('disabled', state == RUN || state == IDLE || state == STEPPING);
+  $('#runBtn5').attr('disabled', state == RUN || state == IDLE || state == STEPPING);
 
   switch (true) {
     case state == RUN && tempSort == 1:
@@ -125,31 +110,17 @@ function setState(newState) {
       $('#pauseBtn5').removeAttr('disabled');
       break;
     default:
-      console.log('default do state');
+      console.log(`default do state, state:${state}\nsort:${tempSort}`);
+      if (tempSort === '5') sizeMerge(mergeWidth, mergeHeight, true);
       disablePause();
       break;
   }
 
-  $('#stepBtn1').attr(
-    'disabled',
-    state == RUN || state == IDLE || state == STEPPING
-  );
-  $('#stepBtn2').attr(
-    'disabled',
-    state == RUN || state == IDLE || state == STEPPING
-  );
-  $('#stepBtn3').attr(
-    'disabled',
-    state == RUN || state == IDLE || state == STEPPING
-  );
-  $('#stepBtn4').attr(
-    'disabled',
-    state == RUN || state == IDLE || state == STEPPING
-  );
-  $('#stepBtn5').attr(
-    'disabled',
-    state == RUN || state == IDLE || state == STEPPING
-  );
+  $('#stepBtn1').attr('disabled', state == RUN || state == IDLE || state == STEPPING);
+  $('#stepBtn2').attr('disabled', state == RUN || state == IDLE || state == STEPPING);
+  $('#stepBtn3').attr('disabled', state == RUN || state == IDLE || state == STEPPING);
+  $('#stepBtn4').attr('disabled', state == RUN || state == IDLE || state == STEPPING);
+  $('#stepBtn5').attr('disabled', state == RUN || state == IDLE || state == STEPPING);
 }
 
 function newSort() {
@@ -515,12 +486,7 @@ function mergeDrawBox(boxLoc) {
     y = mergeSecondRow_y;
   }
   merge.strokeStyle = boxColor;
-  merge.strokeRect(
-    x - 2,
-    y - mergeBarHeight - 2,
-    barWidth + 4,
-    mergeBarHeight + 4
-  );
+  merge.strokeRect(x - 2, y - mergeBarHeight - 2, barWidth + 4, mergeBarHeight + 4);
 }
 
 // Template
@@ -763,9 +729,7 @@ function copyItem(toItem, fromItem) {
       x1 = leftOffset + (fromItem - (VAL_MAIN + 1)) * (barWidth + barGap);
       y1 = secondRow_y;
     }
-    var dist = Math.round(
-      Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
-    );
+    var dist = Math.round(Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)));
     var ct = Math.round(dist / 3);
     if (ct > VAL_MAIN - 1) ct = VAL_MAIN - 1;
     else if (ct < 6) ct = 6;
@@ -907,16 +871,12 @@ function scriptStep() {
           action: 'maxoff',
           delay: 0,
         });
-        if (k == j)
-          console.log('Item ' + j + ' is already in its correct location.');
+        if (k == j) console.log('Item ' + j + ' is already in its correct location.');
         else {
           if (j == 2) console.log('Swap item 2 with item 1');
           else
             console.log(
-              'Swap item ' +
-                j +
-                ' with maximum among items 1 through ' +
-                (j - 1)
+              'Swap item ' + j + ' with maximum among items 1 through ' + (j - 1)
             );
           swapItems(k, j);
         }
@@ -1206,7 +1166,6 @@ function frame() {
       break;
 
     default:
-      console.log('Caiu no default: ' + tempSort);
       defaultDraw();
       break;
   }
@@ -1215,6 +1174,8 @@ function frame() {
 // ---------------------------- Control and Initialization -------------------------------
 
 function doRun(sort) {
+  if (sort === '5') sizeMerge(mergeWidth, mergeHeight, false);
+
   if (tempSort == '0') {
     tempSort = sort;
     console.log(`(${tempSort}) tempSort estava zerado`);
@@ -1247,7 +1208,7 @@ function doPause(sort) {
   if (sort == '2') selectionDraw();
   if (sort == '3') quickDraw();
   if (sort == '4') insertionDraw();
-  if (sort == '5') mergeDraw();
+  if (sort == '5') sizeMerge(mergeWidth, mergeHeight, false), mergeDraw();
 }
 function doNew() {
   // handler for "New" button
@@ -1329,10 +1290,11 @@ function mergeCanva() {
   });
 }
 
-function sizeMerge(w, h) {
+function sizeMerge(w, h, resizeMerge) {
   mergeWidth = w;
   mergeHeight = h;
-  mergeBarHeight = (mergeHeight - 20) / 2.1;
+  mergeBarHeight = resizeMerge === true ? mergeHeight - 20 : (mergeHeight - 20) / 2.1;
+  // mergeBarHeight = (mergeHeight - 20) / 2.1;
   mergeBarIncrement = (mergeBarHeight - 3) / (VAL_MAIN + 1);
   mergeMinBarHeight = mergeBarHeight - (VAL_MAIN + 1) * mergeBarIncrement;
   mergeFirstRow_y = mergeBarHeight + 10;
@@ -1418,31 +1380,31 @@ function size6(w, h) {
   secondRow_y = 2 * barHeight + 25;
 }
 
-function setValMain(x) {
+function setValMain(x, resizeMerge) {
   VAL_MAIN = parseInt(x);
   if (VAL_MAIN === 32) {
     size1(width, height);
-    sizeMerge(mergeWidth, mergeHeight);
+    sizeMerge(mergeWidth, mergeHeight, resizeMerge);
   }
   if (VAL_MAIN === 64) {
     size2(width, height);
-    sizeMerge(mergeWidth, mergeHeight);
+    sizeMerge(mergeWidth, mergeHeight, resizeMerge);
   }
   if (VAL_MAIN === 128) {
     size3(width, height);
-    sizeMerge(mergeWidth, mergeHeight);
+    sizeMerge(mergeWidth, mergeHeight, resizeMerge);
   }
   if (VAL_MAIN === 256) {
     size4(width, height);
-    sizeMerge(mergeWidth, mergeHeight);
+    sizeMerge(mergeWidth, mergeHeight, resizeMerge);
   }
   if (VAL_MAIN === 512) {
     size5(width, height);
-    sizeMerge(mergeWidth, mergeHeight);
+    sizeMerge(mergeWidth, mergeHeight, resizeMerge);
   }
   if (VAL_MAIN === 1024) {
     size6(width, height);
-    sizeMerge(mergeWidth, mergeHeight);
+    sizeMerge(mergeWidth, mergeHeight, resizeMerge);
   }
   newSort();
   return VAL_MAIN;
@@ -1454,8 +1416,8 @@ $(document).ready(function () {
   quickCanva();
   insertionCanva();
   mergeCanva();
-  setValMain($('select option:selected').val());
+  setValMain($('select option:selected').val(), true);
   $('#newBtn').click(() => {
-    setValMain($('select option:selected').val());
+    setValMain($('select option:selected').val(), true);
   });
 });
